@@ -1,0 +1,2406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Natal Chart & Work Synastry Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Patrick+Hand&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<style>
+  :root {
+    --bg: #15131e;
+    --panel: #1e1b2c;
+    --panel-2: #28243a;
+    --ink: #f4ecd8;
+    --muted: #b6aec5;
+    --accent: #ffb86b;
+    --accent-2: #7ad9c7;
+    --line: #3b3552;
+    --good: #7ad9c7;
+    --tense: #ff8a8a;
+    --neutral: #ffd479;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 800px at 80% -10%, #2c2546 0%, transparent 50%),
+      radial-gradient(900px 600px at -10% 110%, #1a3a48 0%, transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    line-height: 1.55;
+  }
+  header {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 28px 8px;
+  }
+  h1 {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 36px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .tagline {
+    font-family: 'Patrick Hand', cursive;
+    color: var(--accent);
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .sub {
+    color: var(--muted);
+    max-width: 720px;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px 28px 80px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin: 24px 0 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    padding: 10px 18px;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  form.card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  fieldset {
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 14px 16px 16px;
+  }
+  legend {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 18px;
+    color: var(--accent);
+    padding: 0 8px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 10px 0 4px;
+  }
+  input, select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input:focus, select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .row3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  button.primary {
+    background: var(--accent);
+    color: #1c1426;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 11px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.primary:hover { filter: brightness(1.07); }
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .results { display: none; margin-top: 8px; }
+  .results.show { display: block; }
+  section.card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  h2 {
+    font-family: 'Lora', serif;
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  h3 {
+    font-family: 'Lora', serif;
+    margin: 22px 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .summary {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: var(--ink);
+    font-size: 17px;
+    line-height: 1.6;
+    background: var(--panel-2);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 8px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .glyph {
+    font-size: 20px;
+    width: 28px;
+    display: inline-block;
+    text-align: center;
+    color: var(--accent-2);
+  }
+  .pl-name {
+    font-weight: 600;
+  }
+  .sign {
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .deg { color: var(--muted); font-size: 13px; }
+  .interp { color: var(--ink); }
+  .aspect-good { color: var(--good); font-weight: 600; }
+  .aspect-tense { color: var(--tense); font-weight: 600; }
+  .aspect-neutral { color: var(--neutral); font-weight: 600; }
+  .legend {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--panel-2);
+    color: var(--muted);
+    margin-left: 6px;
+    border: 1px solid var(--line);
+  }
+  .work-takeaway {
+    background: linear-gradient(135deg, rgba(122,217,199,0.08), rgba(255,184,107,0.08));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .work-takeaway h4 {
+    margin: 0 0 6px;
+    font-family: 'Patrick Hand', cursive;
+    font-size: 18px;
+    color: var(--accent);
+  }
+  .err {
+    background: rgba(255,138,138,0.1);
+    border: 1px solid var(--tense);
+    color: #ffd0d0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+  details { margin-top: 8px; }
+  summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .small-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .ascendant {
+    display: inline-block;
+    background: var(--panel-2);
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin-right: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    border: 1px solid var(--line);
+  }
+  .ascendant b { color: var(--accent); }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+    padding: 8px 0 18px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+  .hero-chart svg { display: block; margin: 0 auto; }
+  .archetype {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1.2;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .archetype small {
+    display: block;
+    font-family: 'Patrick Hand', cursive;
+    font-style: normal;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin-top: 6px;
+  }
+  .blurb {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .chart-legend {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 4px;
+    font-family: 'Patrick Hand', cursive;
+    letter-spacing: 0.04em;
+  }
+
+  .syn-score {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin: 4px 0 18px;
+    padding: 16px 22px;
+    background: linear-gradient(135deg, rgba(255,184,107,0.08), rgba(122,217,199,0.08));
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .syn-score-num {
+    font-family: 'Lora', serif;
+    font-size: 58px;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .syn-score-num small {
+    font-size: 20px;
+    color: var(--muted);
+    margin-left: 4px;
+    font-weight: 400;
+  }
+  .syn-score-label {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 24px;
+    color: var(--accent-2);
+    letter-spacing: 0.02em;
+  }
+  .syn-advice {
+    background: rgba(122,217,199,0.06);
+    border-left: 3px solid var(--accent-2);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    font-style: italic;
+  }
+  .syn-advice b {
+    font-style: normal;
+    color: var(--accent-2);
+    letter-spacing: 0.04em;
+  }
+
+  .careers-heading {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 18px;
+    color: var(--accent);
+    margin: 16px 0 6px;
+    letter-spacing: 0.02em;
+  }
+  .career-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 24px;
+    padding-left: 20px;
+    margin: 4px 0 12px;
+  }
+  @media (max-width: 600px) {
+    .career-list { grid-template-columns: 1fr; }
+  }
+  .career-list li {
+    margin: 0;
+    padding: 2px 0;
+  }
+
+  .contact-card { margin-top: 32px; }
+  .contact-card textarea {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 90px;
+  }
+  .contact-card textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .contact-intro {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .contact-inline-link {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 1px;
+  }
+  .contact-inline-link:hover {
+    color: var(--accent);
+  }
+  .contact-send-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 14px 0;
+  }
+  .contact-btn {
+    display: inline-block;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+  }
+  .contact-btn-primary {
+    background: var(--accent);
+    color: #15131e;
+  }
+  .contact-btn-secondary {
+    background: var(--accent-2);
+    color: #15131e;
+  }
+  .contact-btn:hover { filter: brightness(1.08); }
+  .contact-success a {
+    color: var(--ink);
+    border-bottom: 1px solid var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .contact-success a:hover { color: var(--accent); }
+  .bot-field {
+    position: absolute !important;
+    left: -9999px !important;
+    height: 0;
+    overflow: hidden;
+  }
+  .contact-success {
+    background: rgba(122,217,199,0.08);
+    border: 1px solid var(--accent-2);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .contact-success h3 {
+    margin: 0 0 6px;
+    color: var(--accent-2);
+  }
+  .contact-error {
+    background: rgba(255,138,138,0.1);
+    border: 1px solid var(--tense);
+    color: #ffd0d0;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+
+  .site-footer {
+    max-width: 720px;
+    margin: 60px auto 20px;
+    padding: 18px 20px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .site-footer p { margin: 0 0 8px; }
+  .site-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--accent);
+  }
+  .site-footer a:hover { color: var(--accent-2); border-color: var(--accent-2); }
+
+  @media print {
+    @page { size: A4 portrait; margin: 12mm; }
+    body {
+      background: #15131e !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    header, .tabs, form.card, .no-print { display: none !important; }
+    main { padding: 0; max-width: none; }
+    .pane:not(.active) { display: none !important; }
+    .results { display: block !important; }
+    section.card { page-break-inside: avoid; break-inside: avoid; border: none; }
+    .hero { page-break-after: avoid; break-after: avoid; }
+    table { page-break-inside: avoid; break-inside: avoid; }
+    h3 { page-break-after: avoid; break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tagline">a plain-English chart reader</div>
+  <h1>Natal Chart &amp; Work Synastry Calculator</h1>
+  <p class="sub">Enter a birth date, time, and place to get a plain-language read of someone's natal chart — what each planet means about how they show up. Then add a second person to see how the two of you work together (from a working/collaboration angle, not a romance angle).</p>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" data-tab="natal">Natal chart (1 person)</button>
+    <button class="tab" data-tab="synastry">Work synastry (2 people)</button>
+  </div>
+
+  <!-- NATAL TAB -->
+  <div class="pane active" id="pane-natal">
+    <form class="card" id="natal-form">
+      <fieldset>
+        <legend>Birth details</legend>
+        <div class="grid-2">
+          <div>
+            <label>Name (optional)</label>
+            <input type="text" name="name" placeholder="e.g. Kelsey" />
+          </div>
+          <div>
+            <label>Birth date</label>
+            <input type="date" name="date" required />
+          </div>
+        </div>
+        <div>
+          <label>Birth time (local time at birthplace)</label>
+          <input type="time" name="time" required />
+          <div class="small-note">If you don't know the time, use 12:00 — Sun/most planets stay accurate; Moon &amp; rising will be rough.</div>
+        </div>
+        <div class="row3">
+          <div>
+            <label>City (for lat/lon &amp; timezone lookup)</label>
+            <input type="text" name="city" placeholder="e.g. Atlanta, GA" />
+          </div>
+          <div>
+            <label>Latitude (°N positive)</label>
+            <input type="number" name="lat" step="0.0001" placeholder="33.7490" required />
+          </div>
+          <div>
+            <label>Longitude (°E positive)</label>
+            <input type="number" name="lon" step="0.0001" placeholder="-84.3880" required />
+          </div>
+        </div>
+        <div>
+          <label>House system</label>
+          <select name="houseSystem">
+            <option value="wholesign" selected>Whole Sign (each sign = one house)</option>
+            <option value="placidus">Placidus (quadrant-based, unequal cusps)</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button type="button" class="ghost" id="geocode-natal">Look up city → lat/lon</button>
+          <button type="submit" class="primary">Read this chart</button>
+        </div>
+        <div class="note">Timezone is detected automatically from the birth location and date (including historical DST). No data leaves your browser besides geocoding + timezone lookups.</div>
+      </fieldset>
+    </form>
+    <div class="results" id="natal-results"></div>
+  </div>
+
+  <!-- SYNASTRY TAB -->
+  <div class="pane" id="pane-synastry">
+    <form class="card" id="syn-form">
+      <div class="grid-2">
+        <fieldset>
+          <legend>Person A</legend>
+          <label>Name</label>
+          <input type="text" name="a_name" placeholder="Person A" />
+          <label>Birth date</label>
+          <input type="date" name="a_date" required />
+          <label>Birth time (local)</label>
+          <input type="time" name="a_time" required />
+          <label>City</label>
+          <input type="text" name="a_city" />
+          <div class="row3">
+            <div><label>Lat</label><input type="number" name="a_lat" step="0.0001" required /></div>
+            <div><label>Lon</label><input type="number" name="a_lon" step="0.0001" required /></div>
+            <div style="display:flex;align-items:flex-end;"><button type="button" class="ghost" data-geocode="a" style="width:100%">Lookup</button></div>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Person B</legend>
+          <label>Name</label>
+          <input type="text" name="b_name" placeholder="Person B" />
+          <label>Birth date</label>
+          <input type="date" name="b_date" required />
+          <label>Birth time (local)</label>
+          <input type="time" name="b_time" required />
+          <label>City</label>
+          <input type="text" name="b_city" />
+          <div class="row3">
+            <div><label>Lat</label><input type="number" name="b_lat" step="0.0001" required /></div>
+            <div><label>Lon</label><input type="number" name="b_lon" step="0.0001" required /></div>
+            <div style="display:flex;align-items:flex-end;"><button type="button" class="ghost" data-geocode="b" style="width:100%">Lookup</button></div>
+          </div>
+        </fieldset>
+      </div>
+      <div>
+        <label>House system (applied to both charts)</label>
+        <select name="houseSystem">
+          <option value="wholesign" selected>Whole Sign (each sign = one house)</option>
+          <option value="placidus">Placidus (quadrant-based, unequal cusps)</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary">Compare for work compatibility</button>
+      </div>
+    </form>
+    <div class="results" id="syn-results"></div>
+  </div>
+
+  <section class="card contact-card" id="contact">
+    <h2>Want a deeper read or a consultation?</h2>
+    <p class="contact-intro">If you'd like a personal interpretation, have questions about your chart, or want to book a consultation — send me a note. I'll reply to the email you enter below.</p>
+    <form id="contact-form">
+      <!-- Web3Forms configuration -->
+      <input type="hidden" name="access_key" value="68bf465a-4bdb-4261-b1db-53dc92f569f3" />
+      <input type="hidden" name="subject" value="Astro chart inquiry" />
+      <input type="hidden" name="from_name" value="Natal Chart Calculator" />
+      <!-- Honeypot: Web3Forms looks for this checkbox; humans won't see it -->
+      <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off" />
+      <div class="grid-2">
+        <div>
+          <label>Your name</label>
+          <input type="text" name="name" required />
+        </div>
+        <div>
+          <label>Your email</label>
+          <input type="email" name="email" required />
+        </div>
+      </div>
+      <label>What's on your mind?</label>
+      <textarea name="message" rows="5" required placeholder="A question about your chart, interest in a consultation, or anything else."></textarea>
+      <div class="actions">
+        <button type="submit" class="primary">Send message</button>
+      </div>
+    </form>
+    <div id="contact-success" class="contact-success" style="display:none;"></div>
+    <div id="contact-error" class="contact-error" style="display:none;"></div>
+  </section>
+
+  <footer class="site-footer">
+    <p>For self-reflection and curiosity, not a substitute for a professional astrology reading. Planetary positions are computed locally in your browser using the <a href="https://github.com/cosinekitty/astronomy" target="_blank" rel="noopener">astronomy-engine</a> library (accuracy comparable to Swiss Ephemeris, ~1 arcminute).</p>
+    <p>When you look up a city, the city name is sent to <a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener">OpenStreetMap Nominatim</a> (geocoding) and the resulting coordinates are sent to <a href="https://timeapi.io/" target="_blank" rel="noopener">timeapi.io</a> (timezone lookup). Both are anonymous and cached locally in your browser for 30 days. No birth data is stored or shared by this site.</p>
+  </footer>
+</main>
+
+<script>
+// ---------- ZODIAC + PLANET DATA ----------
+const SIGNS = [
+  { name:'Aries',       glyph:'♈', element:'Fire',  mode:'Cardinal', keywords:'bold, direct, action-first, impatient, competitive' },
+  { name:'Taurus',      glyph:'♉', element:'Earth', mode:'Fixed',    keywords:'steady, sensual, stubborn, value-driven, builds slowly' },
+  { name:'Gemini',      glyph:'♊', element:'Air',   mode:'Mutable',  keywords:'curious, talky, quick, scattered, connector' },
+  { name:'Cancer',      glyph:'♋', element:'Water', mode:'Cardinal', keywords:'protective, intuitive, moody, family-oriented, caring' },
+  { name:'Leo',         glyph:'♌', element:'Fire',  mode:'Fixed',    keywords:'warm, performative, generous, proud, leader-energy' },
+  { name:'Virgo',       glyph:'♍', element:'Earth', mode:'Mutable',  keywords:'analytical, useful, critical, detail-obsessed, helpful' },
+  { name:'Libra',       glyph:'♎', element:'Air',   mode:'Cardinal', keywords:'diplomatic, fair, indecisive, partnership-focused, polished' },
+  { name:'Scorpio',     glyph:'♏', element:'Water', mode:'Fixed',    keywords:'intense, private, all-in, perceptive, transformational' },
+  { name:'Sagittarius', glyph:'♐', element:'Fire',  mode:'Mutable',  keywords:'expansive, candid, restless, philosophical, optimistic' },
+  { name:'Capricorn',   glyph:'♑', element:'Earth', mode:'Cardinal', keywords:'ambitious, structured, patient, serious, results-driven' },
+  { name:'Aquarius',    glyph:'♒', element:'Air',   mode:'Fixed',    keywords:'inventive, contrarian, systems-thinker, detached, future-focused' },
+  { name:'Pisces',      glyph:'♓', element:'Water', mode:'Mutable',  keywords:'imaginative, empathic, blurry, artistic, escapist' },
+];
+
+const PLANETS = [
+  { key:'Sun',     glyph:'☉', label:'Sun',     color:'#ffd166', theme:'core identity, ego, what energizes you' },
+  { key:'Moon',    glyph:'☾', label:'Moon',    color:'#e8eef5', theme:'emotions, instincts, what makes you feel safe' },
+  { key:'Mercury', glyph:'☿', label:'Mercury', color:'#f0a868', theme:'how you think, talk, and process information' },
+  { key:'Venus',   glyph:'♀', label:'Venus',   color:'#a8e6cf', theme:'what you value, how you show appreciation and taste' },
+  { key:'Mars',    glyph:'♂', label:'Mars',    color:'#ff8a8a', theme:'drive, action style, how you fight for what you want' },
+  { key:'Jupiter', glyph:'♃', label:'Jupiter', color:'#a695ee', theme:'where you grow, get lucky, and over-do it' },
+  { key:'Saturn',  glyph:'♄', label:'Saturn',  color:'#c9b48a', theme:'discipline, responsibility, where you take things seriously' },
+  { key:'Uranus',  glyph:'♅', label:'Uranus',  color:'#7ad9c7', theme:'where you break the mold and want freedom (generational)' },
+  { key:'Neptune', glyph:'♆', label:'Neptune', color:'#8ec0e3', theme:'dreams, ideals, where you can be foggy or inspired (generational)' },
+  { key:'Pluto',   glyph:'♇', label:'Pluto',   color:'#d97a7a', theme:'transformation, power, where you go deep (generational)' },
+];
+
+// Plain-English interpretation by planet + sign
+const INTERP = {
+  Sun: {
+    Aries:'You feel most yourself when you\'re starting things — first move, first vote, first to volunteer. You lose energy when stuck in process.',
+    Taurus:'You feel most yourself when you\'re building something tangible and steady. Quality over hustle. You can dig in and refuse to be rushed.',
+    Gemini:'You feel most yourself when you\'re curious, talking, learning out loud, juggling a few projects. Boredom is your enemy.',
+    Cancer:'You feel most yourself when you\'re caring for people you trust and operating from a "home base." You read the room more than you let on.',
+    Leo:'You feel most yourself when you\'re seen for what you create. You bring warmth and showmanship — and you need real recognition, not vague pats.',
+    Virgo:'You feel most yourself when you\'re useful and improving the work. You\'re wired to spot what\'s broken and quietly fix it.',
+    Libra:'You feel most yourself in partnership and in fair, well-designed situations. You instinctively look for the balance point.',
+    Scorpio:'You feel most yourself when you\'re going deep on something hidden — research, strategy, the truth under the surface. Half-measures bore you.',
+    Sagittarius:'You feel most yourself when you\'re expanding — travel, big ideas, new beliefs. You\'ll say the thing other people are tiptoeing around.',
+    Capricorn:'You feel most yourself when you\'re building toward a long-term outcome with structure and authority. Slow climbers tend to outlast everyone.',
+    Aquarius:'You feel most yourself when you\'re challenging the default, working on systems and ideas that don\'t exist yet. You can feel like an outsider on purpose.',
+    Pisces:'You feel most yourself when you\'re tuned into something bigger — art, spirit, an emotional current others miss. Clear boundaries are part of the work.',
+  },
+  Moon: {
+    Aries:'You process emotions fast and prefer to act them out rather than sit with them. Quick to flare, quick to forgive.',
+    Taurus:'You need stability, comfort, and unhurried time to feel okay. Sudden change rattles you more than you let on.',
+    Gemini:'You process feelings by talking them through — sometimes from several angles at once. You can intellectualize hurt before feeling it.',
+    Cancer:'You feel everything deeply and remember it. You need a small circle of safe people and a private place to retreat.',
+    Leo:'You need to feel appreciated and at the center of your inner world. Cold silence hurts you more than direct conflict.',
+    Virgo:'You self-soothe by organizing, helping, and making lists. Anxiety shows up as over-functioning.',
+    Libra:'You feel best when relationships around you are smooth. You can suppress your own needs to keep peace.',
+    Scorpio:'Your inner world is intense and private. You bond deeply or not at all; betrayal is hard to come back from.',
+    Sagittarius:'You self-regulate through movement, travel, and "bigger picture" reframes. You need optimism to function.',
+    Capricorn:'You handle emotions by managing them — getting back to work is a coping strategy. You can come across cooler than you feel.',
+    Aquarius:'You need emotional space. You feel love but resist clinginess. You process by stepping back and analyzing.',
+    Pisces:'You absorb other people\'s moods and don\'t always know whose feeling is whose. Solo time and art are non-negotiable.',
+  },
+  Mercury: {
+    Aries:'You think fast and say it faster. Decisive, blunt, sometimes ahead of your evidence.',
+    Taurus:'You think slowly and concretely. Once you\'ve formed a view it\'s hard to dislodge — but it\'s usually well-built.',
+    Gemini:'You think in connections and tangents. Brilliant at synthesis, prone to changing your mind mid-sentence.',
+    Cancer:'You think with your feelings included. You remember the emotional subtext of every conversation.',
+    Leo:'You think in stories and headlines. You can sell an idea — and you want to be quoted on it.',
+    Virgo:'You think in detail, edits, and "actually." You can find the flaw in any plan, including your own.',
+    Libra:'You think in tradeoffs and "on the other hands." Great at framing options, slow at choosing.',
+    Scorpio:'You think strategically and don\'t show your hand. You ask the question other people are avoiding.',
+    Sagittarius:'You think in big concepts and overshoot. Quick to declare a thesis, slower on the fine print.',
+    Capricorn:'You think in plans and consequences. You don\'t say it unless it can be backed up.',
+    Aquarius:'You think in systems and contrarian angles. You love an unpopular but defensible take.',
+    Pisces:'You think in images, hunches, and metaphor. You know things before you can defend them.',
+  },
+  Venus: {
+    Aries:'You appreciate boldness, directness, and people who go after what they want. You can lose interest if it gets too settled.',
+    Taurus:'You value beauty, comfort, loyalty, and things that hold their value. You give appreciation in tangible form.',
+    Gemini:'You connect through conversation and wit. You like variety and being intellectually entertained.',
+    Cancer:'You value loyalty, care, and being remembered. You show appreciation by feeding people — literally or figuratively.',
+    Leo:'You value being adored and treated like the main event. You\'re generous to those inside the circle.',
+    Virgo:'You show love by being useful. You notice what someone needs before they ask.',
+    Libra:'You value harmony, taste, and partnership. You\'re a natural at making things look and feel right.',
+    Scorpio:'You value depth, exclusivity, and "all in." Surface charm leaves you cold.',
+    Sagittarius:'You value freedom, adventure, and shared horizons. You connect over the next trip or the next idea.',
+    Capricorn:'You value competence, commitment, and people who put in real time. You\'re loyal — once you\'re in.',
+    Aquarius:'You value friendship, independence, and unconventional connection. You can keep one foot out the door.',
+    Pisces:'You value tenderness, art, and being deeply understood. Boundaries are the work.',
+  },
+  Mars: {
+    Aries:'You act first and refine later. Fast starter, can leave finishing for someone else.',
+    Taurus:'You act slowly and immovably. Hard to start, impossible to stop once committed.',
+    Gemini:'You act in many directions at once. Quick, scattered, talkative under pressure.',
+    Cancer:'You act protectively. You\'ll go to the mat for people you love and avoid the fight when you can.',
+    Leo:'You act with flair and pride. Public stakes motivate you; being underestimated motivates you more.',
+    Virgo:'You act by improving the work. Your "fight" looks like rewriting the doc until it\'s right.',
+    Libra:'You act through influence and persuasion, not force. You\'re uncomfortable with open conflict but smart in negotiation.',
+    Scorpio:'You act with intensity and patience. You don\'t blow up — you wait, then move decisively.',
+    Sagittarius:'You act on instinct and conviction. Fast to commit to the big bet, restless on the maintenance.',
+    Capricorn:'You act with discipline and stamina. You\'re willing to grind for the long game while others burn out.',
+    Aquarius:'You act unpredictably and on principle. You\'ll torch the plan if the principle is wrong.',
+    Pisces:'You act indirectly — through art, empathy, persuasion. Direct confrontation drains you.',
+  },
+  Jupiter: {
+    Aries:'You grow by taking initiative and risk. You overdo it on speed.',
+    Taurus:'You grow by building wealth and steady expertise. You overdo it on consumption and comfort.',
+    Gemini:'You grow through learning, networking, and writing. You overdo it on inputs without enough output.',
+    Cancer:'You grow through caring for others and family/community ties. You overdo it on rescuing.',
+    Leo:'You grow through creative self-expression and leadership. You overdo it on the spotlight.',
+    Virgo:'You grow through service, craft, and incremental improvement. You overdo it on critique.',
+    Libra:'You grow through partnership, design, and fairness. You overdo it on people-pleasing.',
+    Scorpio:'You grow through depth, research, and shared resources/equity. You overdo it on control.',
+    Sagittarius:'You grow through travel, teaching, and big ideas. You overdo it on promises.',
+    Capricorn:'You grow through long-game ambition and earned authority. You overdo it on self-seriousness.',
+    Aquarius:'You grow through community, tech, and contrarian bets. You overdo it on detachment.',
+    Pisces:'You grow through compassion, art, and surrender. You overdo it on rescuing or escaping.',
+  },
+  Saturn: {
+    Aries:'You learn discipline by slowing down your impulse to act first. The lesson: patience.',
+    Taurus:'You take resources, money, and self-worth seriously. The lesson: enough is enough.',
+    Gemini:'You take communication and writing seriously. The lesson: say less, mean it more.',
+    Cancer:'You take family and emotional security seriously. The lesson: feeling things isn\'t weakness.',
+    Leo:'You take being seen seriously — sometimes too seriously. The lesson: create even when no one\'s watching.',
+    Virgo:'You take work and health seriously. The lesson: done is better than perfect.',
+    Libra:'You take partnerships and fairness seriously. The lesson: your needs count too.',
+    Scorpio:'You take power and trust seriously. The lesson: let things be seen.',
+    Sagittarius:'You take belief and meaning seriously. The lesson: live the philosophy, don\'t just preach it.',
+    Capricorn:'You take career and authority seriously — Saturn is at home here. The lesson: success isn\'t self-worth.',
+    Aquarius:'You take community and ideology seriously. The lesson: be in the room, not just observing it.',
+    Pisces:'You take imagination and spirit seriously. The lesson: structure protects the dream.',
+  },
+  Uranus: {
+    Aries:'Generational: you\'re part of a cohort that disrupts how individuals assert themselves.',
+    Taurus:'Generational: your cohort disrupts money, ownership, and value systems.',
+    Gemini:'Generational: your cohort disrupts communication and information.',
+    Cancer:'Generational: your cohort disrupts family and what "home" means.',
+    Leo:'Generational: your cohort disrupts performance, creativity, and celebrity.',
+    Virgo:'Generational: your cohort disrupts work, health, and daily systems.',
+    Libra:'Generational: your cohort disrupts relationships and what fairness looks like.',
+    Scorpio:'Generational: your cohort disrupts power, sex, and shared resources.',
+    Sagittarius:'Generational: your cohort disrupts belief systems and higher education.',
+    Capricorn:'Generational: your cohort disrupts institutions and authority.',
+    Aquarius:'Generational: your cohort disrupts tech, community, and the future itself.',
+    Pisces:'Generational: your cohort disrupts spirituality, art, and what\'s "real."',
+  },
+  Neptune: {
+    Aries:'Generational: your cohort dreams of bold individual reinvention.',
+    Taurus:'Generational: your cohort romanticizes the land and material simplicity.',
+    Gemini:'Generational: your cohort dreams in information and connection.',
+    Cancer:'Generational: your cohort romanticizes family and roots.',
+    Leo:'Generational: your cohort dreams of fame and personal magic.',
+    Virgo:'Generational: your cohort romanticizes work, health, and craft.',
+    Libra:'Generational: your cohort dreams of perfect partnership and aesthetic.',
+    Scorpio:'Generational: your cohort dreams in intensity, taboo, and transformation.',
+    Sagittarius:'Generational: your cohort dreams of meaning, travel, freedom.',
+    Capricorn:'Generational: your cohort dreams of legacy and dissolution of old structures.',
+    Aquarius:'Generational: your cohort dreams of utopia, tech, and collective awakening.',
+    Pisces:'Generational: your cohort is fully tuned to the mystical/blurred (Neptune at home).',
+  },
+  Pluto: {
+    Aries:'Generational: deep transformation in how power is initiated.',
+    Taurus:'Generational: deep transformation in money, land, and value.',
+    Gemini:'Generational: deep transformation in language and media.',
+    Cancer:'Generational: deep transformation in family and nation.',
+    Leo:'Generational: deep transformation in self-expression and ego (Boomers).',
+    Virgo:'Generational: deep transformation in work, health, systems.',
+    Libra:'Generational: deep transformation in relationship and law.',
+    Scorpio:'Generational: deep transformation in intimacy, taboo, finance.',
+    Sagittarius:'Generational: deep transformation in belief and global ideology.',
+    Capricorn:'Generational: deep transformation in institutions and power (current).',
+    Aquarius:'Generational: deep transformation in tech, society, networks (emerging).',
+    Pisces:'Generational: deep transformation in spirit and dissolution.',
+  },
+};
+
+// ---------- ASPECT DATA ----------
+const ASPECTS = [
+  { name:'Conjunction', angle:0,   orb:8, flavor:'fusion',     tone:'neutral' },
+  { name:'Opposition',  angle:180, orb:8, flavor:'tension',    tone:'tense'   },
+  { name:'Trine',       angle:120, orb:6, flavor:'easy flow',  tone:'good'    },
+  { name:'Square',      angle:90,  orb:6, flavor:'friction',   tone:'tense'   },
+  { name:'Sextile',     angle:60,  orb:4, flavor:'opportunity',tone:'good'    },
+];
+
+// ---------- UTIL ----------
+const norm360 = a => ((a % 360) + 360) % 360;
+const signOf = lon => SIGNS[Math.floor(norm360(lon)/30)];
+const degInSign = lon => norm360(lon) % 30;
+
+function fmtDeg(lon) {
+  const d = degInSign(lon);
+  const deg = Math.floor(d);
+  const min = Math.floor((d - deg) * 60);
+  return `${deg}°${String(min).padStart(2,'0')}'`;
+}
+
+// Which house (1–12) contains the given ecliptic longitude.
+function houseOf(lon, cusps) {
+  for (let i = 0; i < 12; i++) {
+    const start = cusps[i];
+    const end   = cusps[(i + 1) % 12];
+    const dist  = (lon - start + 360) % 360;
+    const span  = (end - start + 360) % 360 || 360;
+    if (dist < span) return i + 1;
+  }
+  return 1;
+}
+
+// Combined "15°23' ♋ Cancer" position string
+function fmtPosFull(lon) {
+  const s = signOf(lon);
+  return `${fmtDeg(lon)} ${s.glyph} ${s.name}`;
+}
+
+function ordinal(n) {
+  if (n >= 11 && n <= 13) return n + 'th';
+  switch (n % 10) {
+    case 1: return n + 'st';
+    case 2: return n + 'nd';
+    case 3: return n + 'rd';
+    default: return n + 'th';
+  }
+}
+
+// ---------- HAND-DRAWN GLYPHS (SVG paths, not unicode) ----------
+const GLYPHS = {
+  // Planets
+  Sun:     '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+  Moon:    '<path d="M15.5 5 a7.5 7.5 0 1 0 0 14 a5.5 5.5 0 1 1 0 -14 z" fill="currentColor" stroke="none"/>',
+  Mercury: '<circle cx="12" cy="11" r="3"/><path d="M8.5 7 Q12 4 15.5 7"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9.5" y1="17.5" x2="14.5" y2="17.5"/>',
+  Venus:   '<circle cx="12" cy="9" r="4"/><line x1="12" y1="13" x2="12" y2="21"/><line x1="9" y1="18" x2="15" y2="18"/>',
+  Mars:    '<circle cx="10" cy="14" r="4.5"/><line x1="13.2" y1="10.8" x2="20" y2="4"/><polyline points="15,4 20,4 20,9"/>',
+  Jupiter: '<path d="M7 5 Q4 5 4 9 Q4 13 9 13 L13 13 L13 19"/><line x1="6" y1="15" x2="15" y2="15"/>',
+  Saturn:  '<path d="M6 6 L13 6 M9.5 4 L9.5 16 Q9.5 19 13 19 Q16.5 19 16.5 15.5 Q16.5 12 13 12"/>',
+  Uranus:  '<line x1="6" y1="5" x2="6" y2="13"/><line x1="18" y1="5" x2="18" y2="13"/><line x1="6" y1="9" x2="18" y2="9"/><line x1="12" y1="13" x2="12" y2="17"/><circle cx="12" cy="19.5" r="1.7"/>',
+  Neptune: '<line x1="12" y1="5" x2="12" y2="20"/><path d="M5 6 Q5 14 12 14 Q19 14 19 6"/><line x1="6" y1="6" x2="6" y2="9"/><line x1="18" y1="6" x2="18" y2="9"/><line x1="9" y1="18" x2="15" y2="18"/>',
+  Pluto:   '<line x1="12" y1="11" x2="12" y2="20"/><line x1="9" y1="17.5" x2="15" y2="17.5"/><circle cx="12" cy="8" r="3"/>',
+
+  // Signs
+  Aries:       '<path d="M12 8 L12 18 M12 8 Q9 7 7 10 M12 8 Q15 7 17 10"/>',
+  Taurus:      '<circle cx="12" cy="15" r="4.5"/><path d="M6 8 Q7 4 12 7 Q17 4 18 8"/>',
+  Gemini:      '<line x1="9" y1="5" x2="9" y2="19"/><line x1="15" y1="5" x2="15" y2="19"/><line x1="6" y1="5" x2="12" y2="5"/><line x1="12" y1="5" x2="18" y2="5"/><line x1="6" y1="19" x2="12" y2="19"/><line x1="12" y1="19" x2="18" y2="19"/>',
+  Cancer:      '<circle cx="8" cy="10" r="2.5"/><circle cx="16" cy="14" r="2.5"/><path d="M5.5 10 Q5 5 12 6 M18.5 14 Q19 19 12 18"/>',
+  Leo:         '<circle cx="9" cy="11" r="3.5"/><path d="M11.5 12 Q17 11 17 16 Q17 20 12.5 19"/>',
+  Virgo:       '<path d="M5 19 L5 8 Q5 6 7 6 Q9 6 9 8 L9 19 M9 8 Q9 6 11 6 Q13 6 13 8 L13 19 M13 8 Q13 6 15 6 Q17 6 17 8 L17 16 Q17 19 14 19"/>',
+  Libra:       '<line x1="4" y1="18" x2="20" y2="18"/><line x1="6" y1="14" x2="18" y2="14"/><path d="M9 14 Q9 10 12 10 Q15 10 15 14"/>',
+  Scorpio:     '<path d="M5 19 L5 8 Q5 6 7 6 Q9 6 9 8 L9 19 M9 8 Q9 6 11 6 Q13 6 13 8 L13 19 M13 8 Q13 6 15 6 Q17 6 17 8 L17 16 L20 19 M20 16 L20 19 L17 19"/>',
+  Sagittarius: '<line x1="5" y1="19" x2="19" y2="5"/><polyline points="13,5 19,5 19,11"/><line x1="9" y1="11" x2="15" y2="17"/>',
+  Capricorn:   '<path d="M5 7 L8 12 L11 7 L11 14 Q11 18 14 18 Q17 18 17 14 Q17 12 14 12"/>',
+  Aquarius:    '<path d="M5 10 Q7 7 9 10 Q11 13 13 10 Q15 7 17 10 Q19 13 19 10"/><path d="M5 16 Q7 13 9 16 Q11 19 13 16 Q15 13 17 16 Q19 19 19 16"/>',
+  Pisces:      '<path d="M7 5 Q4 12 7 19"/><path d="M17 5 Q20 12 17 19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+};
+
+// Embed an SVG glyph at (cx, cy) inside a parent SVG (chart wheel).
+function chartGlyph(key, cx, cy, size, color, sw) {
+  size = size || 22;
+  sw = sw || 1.7;
+  const half = size / 2;
+  return `<svg x="${(cx - half).toFixed(1)}" y="${(cy - half).toFixed(1)}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="${color}" stroke-width="${sw}" fill="none" stroke-linecap="round" stroke-linejoin="round">${GLYPHS[key] || ''}</svg>`;
+}
+
+// Inline SVG glyph for HTML (tables, paragraphs).
+function htmlGlyph(key, size, color) {
+  size = size || 18;
+  color = color || 'currentColor';
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="display:inline-block;vertical-align:-0.22em;color:${color}" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round">${GLYPHS[key] || ''}</svg>`;
+}
+
+// ---------- "ABOUT" + "AT WORK" CONTENT DATA ----------
+const HOUSE_THEMES = {
+  1:  'self-presentation and how they show up in a new room',
+  2:  'money, possessions, values, and self-worth',
+  3:  'communication, learning, and the day-to-day environment',
+  4:  'home, family, and the emotional foundation they were built on',
+  5:  'creativity, play, romance, and what they make for fun',
+  6:  'daily work, health, and the small habits of life',
+  7:  'one-on-one partnerships and how they pair up with people',
+  8:  'shared resources, intimacy, and what they go deep on',
+  9:  'travel, philosophy, teaching, and the big picture',
+  10: 'career, public reputation, and how they\'re known in the world',
+  11: 'friendship, community, and long-term goals',
+  12: 'solitude, the unconscious, and what they keep private',
+};
+
+const ELEMENT_VIBE = {
+  Fire:  'actively and expressively, with a need to move and be seen',
+  Earth: 'tangibly and slowly, with a need for results they can touch',
+  Air:   'through ideas and conversation, with a need to make sense of things',
+  Water: 'emotionally and intuitively, with a need to feel the room',
+};
+
+const MARS_WORK = {
+  Aries:'fast starter — first to take initiative, impatient with process',
+  Taurus:'slow, steady, immovable once committed; quality over speed',
+  Gemini:'juggles many projects; talky under pressure, sometimes scattered',
+  Cancer:'protective of their team; works hard for people they care about',
+  Leo:'energized by public stakes and recognition; performs in the spotlight',
+  Virgo:'drive shows up as relentless refinement of the work',
+  Libra:'operates through persuasion and partnership, not force',
+  Scorpio:'patient, intense, plays a long game; goes deep on what matters',
+  Sagittarius:'big-bet appetite; commits fast, restless on maintenance',
+  Capricorn:'disciplined, ambitious, built for the long grind',
+  Aquarius:'acts on principle; will torch a plan if the principle\'s wrong',
+  Pisces:'acts through empathy and craft; drained by direct confrontation',
+};
+
+const MERCURY_WORK = {
+  Aries:'fast, blunt, decisive; says what they think',
+  Taurus:'slow, concrete, considered; won\'t be rushed into a position',
+  Gemini:'fluent and fast; great in conversation, sometimes scattered in writing',
+  Cancer:'communicates with feeling and memory included; reads the subtext',
+  Leo:'narrative-driven; great at sound bites and stories',
+  Virgo:'precise and detail-oriented; excellent editor, can over-critique',
+  Libra:'frames everything in tradeoffs; great in negotiation, slow to decide',
+  Scorpio:'asks the question others avoid; doesn\'t show their full hand',
+  Sagittarius:'big-picture thinker; quick to declare, less interested in fine print',
+  Capricorn:'thinks in plans and consequences; says less, means it more',
+  Aquarius:'systems thinker; loves the contrarian-but-defensible angle',
+  Pisces:'communicates in images and metaphor; intuitive read on subtext',
+};
+
+const SATURN_WORK = {
+  Aries:'learning to slow down before acting; patience is the work',
+  Taurus:'money, resources, and what \'enough\' means',
+  Gemini:'what they say and write; learning to say less, mean it more',
+  Cancer:'emotional security; learning that feeling things isn\'t weakness',
+  Leo:'being seen for their work; creating even when no one\'s watching',
+  Virgo:'craft and the body; learning that done beats perfect',
+  Libra:'partnerships and fairness; learning their needs count too',
+  Scorpio:'power and trust; learning to let things be seen',
+  Sagittarius:'belief and meaning; living the philosophy, not just preaching it',
+  Capricorn:'career and authority — Saturn at home here; the long climb',
+  Aquarius:'community and ideology; being in the room, not just observing',
+  Pisces:'imagination and spirit; structure protects the dream',
+};
+
+const SUN_SAT_WORK = {
+  Conjunction: 'Identity is tied to discipline and earned authority — reads as serious and hard-working, sometimes hard on themselves.',
+  Square:      'Tension between expression and structure — they push themselves and others. Productive when channeled, draining when not.',
+  Opposition:  'Authority dynamics show up clearly; they may seek out (or become) the senior voice in the room.',
+  Trine:       'Quiet, durable confidence; a natural fit with long-game work and structure.',
+  Sextile:     'Easy access to disciplined execution; they get things done without drama.',
+};
+
+const MARS_SAT_WORK = {
+  Conjunction: 'Disciplined drive — they can sustain high effort over long stretches without burning out.',
+  Square:      'Stop-go pattern between push and restriction; once they learn to pace, they\'re formidable.',
+  Opposition:  'Action vs. structure tension; learning to align their drive with the constraints they\'re given.',
+  Trine:       'Drive and structure flow well together; great execution under deadlines.',
+  Sextile:     'Effective when given a clear framework to push within.',
+};
+
+function aboutParagraph(positions, ascLon, cusps, name) {
+  const sun = signOf(positions.Sun);
+  const sunHouse = houseOf(positions.Sun, cusps);
+  const moon = signOf(positions.Moon);
+  const moonHouse = houseOf(positions.Moon, cusps);
+  const ascSign = signOf(ascLon);
+
+  // Use existing INTERP data for the short feel phrases
+  const sunInterp = (INTERP.Sun && INTERP.Sun[sun.name]) || '';
+  const moonInterp = (INTERP.Moon && INTERP.Moon[moon.name]) || '';
+  const sunFeel = sunInterp.split('.')[0].replace(/^You feel most yourself when /i, '').toLowerCase();
+  const moonFeel = moonInterp.split('.')[0].replace(/^You /, '').toLowerCase();
+
+  // Element balance across personal planets
+  const elemCount = { Fire:0, Earth:0, Air:0, Water:0 };
+  for (const k of ['Sun','Moon','Mercury','Venus','Mars']) {
+    elemCount[signOf(positions[k]).element]++;
+  }
+  const dominant = Object.entries(elemCount).sort((a,b)=>b[1]-a[1])[0][0];
+
+  const who = name && name.trim() ? name.trim() : 'This person';
+
+  return `<p>${who} is a <b>${sun.name} Sun in the ${ordinal(sunHouse)} house</b>, a <b>${moon.name} Moon in the ${ordinal(moonHouse)} house</b>, with <b>${ascSign.name} rising</b>. On first read they come across ${ascSign.keywords.split(',').slice(0,2).join(',')}. Under that surface, the ${sun.name} Sun means they ${sunFeel}, with that energy directed toward <i>${HOUSE_THEMES[sunHouse]}</i>. Emotionally, the ${moon.name} Moon in the ${ordinal(moonHouse)} house means they ${moonFeel} — and that inner life plays out around <i>${HOUSE_THEMES[moonHouse]}</i>. Their personal planets lean ${dominant.toLowerCase()}, so they engage with the world ${ELEMENT_VIBE[dominant]}.</p>`;
+}
+
+// ---------- POSSIBLE CAREERS BY MIDHEAVEN ----------
+// The MC sign is the primary career signal in Western astrology — it
+// describes the public role and the direction the person grows toward.
+const CAREERS_BY_MC = {
+  Aries: {
+    direction: 'lead, initiate, and build from zero. Thrives in fast-paced, independent, or competitive environments where they can take charge.',
+    jobs: ['Entrepreneur / founder', 'Sales (commission-driven)', 'Athletic coaching / pro sports', 'Emergency services (EMT, firefighter, ER doctor)', 'Military or law enforcement', 'Construction or trades leadership', 'Startup operator', 'Stunt or extreme-sports work'],
+  },
+  Taurus: {
+    direction: 'build something tangible and lasting. Thrives in stable, sensory, value-driven work — money, beauty, food, craft.',
+    jobs: ['Banking / wealth management', 'Real estate', 'Designer (interior, product, graphic)', 'Chef / restaurateur', 'Fashion / luxury goods', 'Musician (esp. singer or producer)', 'Agriculture / sustainable farming', 'Art dealer or curator', 'Jewelry / craft maker'],
+  },
+  Gemini: {
+    direction: 'connect, communicate, translate, and teach. Built for variety, language, and information flow.',
+    jobs: ['Writer / journalist', 'Marketing / PR / communications', 'Teacher (esp. K-12 or adult ed)', 'Social media or content strategy', 'Translator / interpreter', 'Sales (relationship-driven)', 'Broadcaster / podcaster', 'Stockbroker', 'Travel writer or guide'],
+  },
+  Cancer: {
+    direction: 'care for, nurture, protect, or preserve. Builds careers around home, family, history, or making others feel safe.',
+    jobs: ['Nurse / caregiver', 'Therapist / counselor', 'Residential real estate', 'Hospitality / hotel management', 'Early-childhood education', 'Food / home-style restaurants', 'Museum / archive work', 'Social worker', 'Family-business operator', 'Historian or genealogist'],
+  },
+  Leo: {
+    direction: 'perform, create, and lead with personal magnetism. Shines in roles with visibility, creative expression, or executive presence.',
+    jobs: ['Actor / performer', 'Executive leadership (CEO, GM)', 'Brand or marketing director', 'Fashion / beauty industry', 'Entertainment producer', 'Working creatively with children', 'Motivational speaker / coach', 'Event production', 'Public-facing politics'],
+  },
+  Virgo: {
+    direction: 'analyze, refine, and serve through skilled craft. Builds careers around expertise, detail, health, or systems.',
+    jobs: ['Healthcare (nutrition, PT, dentistry)', 'Editor / copy editor', 'Accountant / bookkeeper / auditor', 'Data analyst', 'IT / DevOps / systems engineer', 'Quality assurance', 'Researcher', 'Skilled craft (watchmaking, tailoring)', 'Pharmacist', 'Executive assistant / chief of staff'],
+  },
+  Libra: {
+    direction: 'mediate, design, and create beauty or balance. Best in partnership-driven, aesthetic, or fairness-based work.',
+    jobs: ['Lawyer (mediation, contracts, family)', 'Diplomat / negotiator', 'Interior or fashion designer', 'Art gallery / curatorial work', 'Marriage or couples counselor', 'Wedding / event planner', 'HR / people operations lead', 'UX designer', 'Public relations'],
+  },
+  Scorpio: {
+    direction: 'transform, investigate, and work with what\'s hidden or intense. Handles depth, taboo, money, and crisis well.',
+    jobs: ['Psychologist / psychiatrist', 'Research scientist', 'Investigator / detective / forensics', 'Surgeon', 'Investment banker / private equity', 'Tax or estate attorney', 'Crisis manager', 'Trauma therapist', 'Funeral director / hospice worker', 'Intelligence / national security'],
+  },
+  Sagittarius: {
+    direction: 'teach, publish, travel, and expand knowledge. Best when work has freedom, meaning, and a horizon to grow into.',
+    jobs: ['Professor / university teacher', 'Publisher / editor', 'Travel writer or tour leader', 'International business / consulting', 'Sports coaching or pro athletics', 'International or human-rights lawyer', 'Religious or spiritual leader', 'Broadcaster / commentator', 'Adventure / outdoor industries'],
+  },
+  Capricorn: {
+    direction: 'build long-term institutions and earn authority. Wired for the slow climb, hierarchy, and serious responsibility.',
+    jobs: ['CEO / senior executive', 'Government / public administration', 'Institutional finance / banking', 'Real estate developer', 'Architect or engineer', 'Management consultant', 'Corporate lawyer', 'Founder of long-horizon businesses', 'Board member or director'],
+  },
+  Aquarius: {
+    direction: 'innovate, organize collectives, and challenge defaults. Best in tech, science, social change, or unconventional structures.',
+    jobs: ['Software engineer / tech founder', 'Research scientist', 'Activist / nonprofit leader', 'Inventor / R&D', 'Astronomer / aerospace', 'Community organizer', 'Futurist / strategist', 'Policy researcher', 'Independent consultant', 'AI / ML researcher'],
+  },
+  Pisces: {
+    direction: 'create, heal, or work with the unseen. Best in art, music, film, healing, spirituality, or behind-the-scenes roles.',
+    jobs: ['Artist (visual, music, film)', 'Photographer / cinematographer', 'Therapist / healer / spiritual teacher', 'Hospice or pediatric nurse', 'Social worker (vulnerable populations)', 'Nonprofit or charity work', 'Behind-the-scenes production (sound, editing)', 'Yoga or meditation teacher', 'Marine biology / oceanography'],
+  },
+};
+
+function careersSection(positions, mcLon, cusps, name) {
+  const mc = signOf(mcLon);
+  const mcInfo = CAREERS_BY_MC[mc.name];
+  const sunHouse = houseOf(positions.Sun, cusps);
+  const mars = signOf(positions.Mars);
+  const mercury = signOf(positions.Mercury);
+
+  // Planets in 10th (career) and 6th (daily work)
+  const tenth = [], sixth = [];
+  for (const p of ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn']) {
+    const h = houseOf(positions[p], cusps);
+    if (h === 10) tenth.push(p);
+    if (h === 6)  sixth.push(p);
+  }
+
+  const who = name && name.trim() ? name.trim() : 'They';
+  let html = '';
+
+  html += `<p>Their <b>Midheaven in ${mc.name}</b> — the career direction at the top of their chart — points them to ${mcInfo.direction}</p>`;
+
+  const signals = [];
+  if (tenth.length) {
+    signals.push(`<b>10th house (public career):</b> ${tenth.join(', ')} sit${tenth.length === 1 ? 's' : ''} here. Visible, public-facing work is woven into who they are — they\'re not built for invisible roles.`);
+  }
+  if (sixth.length) {
+    signals.push(`<b>6th house (daily work):</b> ${sixth.join(', ')} sit${sixth.length === 1 ? 's' : ''} here. They need engaging routines and tangible craft on a day-to-day basis; pure abstract work won\'t hold them.`);
+  }
+  if (sunHouse === 10) {
+    signals.push(`<b>Sun in the 10th:</b> career is core identity — they\'re built to be known by their work, not just to do it.`);
+  }
+  if (signals.length) {
+    html += `<ul>${signals.map(s => `<li>${s}</li>`).join('')}</ul>`;
+  }
+
+  html += `<h4 class="careers-heading">Specific job types worth considering</h4>`;
+  html += `<ul class="career-list">${mcInfo.jobs.map(j => `<li>${j}</li>`).join('')}</ul>`;
+  html += `<p class="small-note">This list is a starting point, not a prescription. Best fits also depend on Mars (drive style — currently in ${mars.name}) and Mercury (communication style — in ${mercury.name}). Most people have several plausible paths; the chart suggests <i>direction</i>, not destiny.</p>`;
+
+  return html;
+}
+
+function atWorkParagraph(positions, cusps, aspects, name) {
+  const sun = signOf(positions.Sun);
+  const sunHouse = houseOf(positions.Sun, cusps);
+  const mercury = signOf(positions.Mercury);
+  const mercuryHouse = houseOf(positions.Mercury, cusps);
+  const mars = signOf(positions.Mars);
+  const marsHouse = houseOf(positions.Mars, cusps);
+  const saturn = signOf(positions.Saturn);
+  const saturnHouse = houseOf(positions.Saturn, cusps);
+
+  const sunSat = aspects.find(a =>
+    (a.p1 === 'Sun' && a.p2 === 'Saturn') || (a.p1 === 'Saturn' && a.p2 === 'Sun'));
+  const marsSat = aspects.find(a =>
+    (a.p1 === 'Mars' && a.p2 === 'Saturn') || (a.p1 === 'Saturn' && a.p2 === 'Mars'));
+
+  // Personal planets in work-relevant houses
+  const sixthPlanets = [], tenthPlanets = [];
+  for (const k of ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn']) {
+    const h = houseOf(positions[k], cusps);
+    if (h === 6)  sixthPlanets.push(k);
+    if (h === 10) tenthPlanets.push(k);
+  }
+
+  let bullets = [];
+  bullets.push(`<b>How they execute:</b> ${MARS_WORK[mars.name]} <span class="deg">(Mars in ${mars.name}, ${ordinal(marsHouse)} house)</span>.`);
+  bullets.push(`<b>How they think &amp; communicate:</b> ${MERCURY_WORK[mercury.name]} <span class="deg">(Mercury in ${mercury.name}, ${ordinal(mercuryHouse)} house)</span>.`);
+  bullets.push(`<b>Where they take things seriously:</b> ${SATURN_WORK[saturn.name]} <span class="deg">(Saturn in ${saturn.name}, ${ordinal(saturnHouse)} house)</span>.`);
+  if (sunSat)  bullets.push(`<b>Sun–Saturn ${sunSat.aspect.toLowerCase()}:</b> ${SUN_SAT_WORK[sunSat.aspect] || ''}`);
+  if (marsSat) bullets.push(`<b>Mars–Saturn ${marsSat.aspect.toLowerCase()}:</b> ${MARS_SAT_WORK[marsSat.aspect] || ''}`);
+  if (tenthPlanets.length) bullets.push(`<b>Career signals (10th house):</b> ${tenthPlanets.length} personal planet${tenthPlanets.length>1?'s':''} (${tenthPlanets.join(', ')}) sit${tenthPlanets.length>1?'':'s'} in the 10th — public reputation and visible achievements matter to who they are.`);
+  if (sixthPlanets.length) bullets.push(`<b>Daily-work signals (6th house):</b> ${sixthPlanets.length} planet${sixthPlanets.length>1?'s':''} (${sixthPlanets.join(', ')}) in the 6th — a lot of their identity plays out through routine, craft, and being useful.`);
+
+  const sunBlurb = `Their core identity (Sun in ${sun.name}, ${ordinal(sunHouse)} house) channels its energy into <i>${HOUSE_THEMES[sunHouse]}</i> — that\'s where you\'ll see them most engaged on the job.`;
+  return `<p>${sunBlurb}</p><ul>${bullets.map(b => `<li>${b}</li>`).join('')}</ul>`;
+}
+
+function utcDateFromInputs(dateStr, timeStr, tzOffsetHours) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const [hh,mm] = timeStr.split(':').map(Number);
+  const utcMs = Date.UTC(y, m-1, d, hh, mm) - tzOffsetHours*3600*1000;
+  return new Date(utcMs);
+}
+
+// Look up IANA timezone (e.g. "America/New_York") for given lat/lon.
+// Uses timeapi.io (free, no key). Cached, with a longitude-based fallback
+// if the API is down or rate-limited so the chart still renders.
+async function lookupTimezoneForCoords(lat, lon) {
+  const key = `tz:${lat.toFixed(2)},${lon.toFixed(2)}`;
+  const cached = readCache(key);
+  if (cached) return cached;
+  try {
+    const url = `https://timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lon}`;
+    const r = await fetchWithTimeout(url, {}, 6000);
+    if (!r.ok) throw new Error('tz api');
+    const j = await r.json();
+    if (j && j.timeZone) {
+      const result = { zone: j.timeZone, fallback: false };
+      writeCache(key, result);
+      return result;
+    }
+  } catch (e) { /* fall through to estimate */ }
+  // Fallback: 15° longitude ≈ 1 hour. Coarse, no DST, no historical accuracy.
+  const offset = Math.round(lon / 15);
+  return { zone: `Etc/GMT${offset > 0 ? '-' : '+'}${Math.abs(offset)}`, fallback: true };
+}
+
+// Get UTC offset (in hours, fractional ok) that applies in `zone` at the given
+// JS Date instant. Uses the browser's built-in IANA tz database (handles historical DST).
+function offsetHoursForZoneAt(date, zone) {
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: zone, timeZoneName: 'shortOffset',
+      year:'numeric', month:'numeric', day:'numeric', hour:'numeric'
+    });
+    const parts = dtf.formatToParts(date);
+    const tzName = (parts.find(p => p.type === 'timeZoneName') || {}).value || '';
+    const m = tzName.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+    if (!m) return 0;
+    const sign = m[1] === '-' ? -1 : 1;
+    const h = parseInt(m[2], 10);
+    const mm = m[3] ? parseInt(m[3], 10) : 0;
+    return sign * (h + mm/60);
+  } catch (e) { return 0; }
+}
+
+// Convert local clock time at a given IANA zone to a UTC Date instant.
+// Handles DST by iterating once across the boundary.
+function localTimeInZoneToUTC(dateStr, timeStr, zone) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const [hh,mm] = timeStr.split(':').map(Number);
+  const guessUTC = Date.UTC(y, m-1, d, hh, mm);
+  const off1 = offsetHoursForZoneAt(new Date(guessUTC), zone);
+  const refined = guessUTC - off1 * 3600 * 1000;
+  const off2 = offsetHoursForZoneAt(new Date(refined), zone);
+  return { date: new Date(guessUTC - off2 * 3600 * 1000), offsetHours: off2 };
+}
+
+// ---------- PLANET POSITIONS ----------
+function planetPositions(jsDate) {
+  if (typeof Astronomy === 'undefined') {
+    throw new Error('Astronomy library failed to load. Check your internet connection and refresh.');
+  }
+  const A = Astronomy;
+
+  // astronomy-engine's EclipticLongitude() is HELIOCENTRIC (planet around the Sun).
+  // Astrology needs GEOCENTRIC (as seen from Earth) + equinox of date (tropical).
+  // We compute geocentric via GeoVector→Ecliptic, then precess from J2000 to date.
+  const j2000Ms = Date.UTC(2000, 0, 1, 12, 0, 0);
+  const yearsFromJ2000 = (jsDate.getTime() - j2000Ms) / (365.25 * 86400 * 1000);
+  const precessionDeg = yearsFromJ2000 * 50.290966 / 3600;  // IAU annual precession
+
+  function geoEclLon(body) {
+    const geoVec = A.GeoVector(body, jsDate, true);   // J2000 geocentric eq vector, aberration on
+    const ecl    = A.Ecliptic(geoVec);                // → J2000 ecliptic spherical
+    return norm360(ecl.elon + precessionDeg);         // → equinox of date
+  }
+
+  const out = {};
+  // Sun: SunPosition is already geocentric apparent of date — no precession adjustment needed
+  out.Sun     = norm360(A.SunPosition(jsDate).elon);
+  // Moon: EclipticGeoMoon is J2000 geocentric — apply precession
+  out.Moon    = norm360(A.EclipticGeoMoon(jsDate).lon + precessionDeg);
+  out.Mercury = geoEclLon(A.Body.Mercury);
+  out.Venus   = geoEclLon(A.Body.Venus);
+  out.Mars    = geoEclLon(A.Body.Mars);
+  out.Jupiter = geoEclLon(A.Body.Jupiter);
+  out.Saturn  = geoEclLon(A.Body.Saturn);
+  out.Uranus  = geoEclLon(A.Body.Uranus);
+  out.Neptune = geoEclLon(A.Body.Neptune);
+  out.Pluto   = geoEclLon(A.Body.Pluto);
+  return out;
+}
+
+function errMsg(err) {
+  if (!err) return 'unknown error';
+  if (typeof err === 'string') return err;
+  if (err.message) return err.message;
+  try { return JSON.stringify(err); } catch (e) { return String(err); }
+}
+
+// Mean obliquity of ecliptic in degrees (approx for given Julian date)
+function meanObliquityDeg(date) {
+  // T = Julian centuries from J2000
+  const JD = date.getTime()/86400000 + 2440587.5;
+  const T = (JD - 2451545.0) / 36525.0;
+  // IAU 1980 formula (good enough)
+  const eps = 23.4392911 - 0.0130041667*T - 1.6388889e-7*T*T + 5.0361111e-7*T*T*T;
+  return eps;
+}
+
+// Local Sidereal Time in degrees
+function localSiderealTimeDeg(date, longitudeDeg) {
+  // GMST via astronomy-engine
+  const gmstHours = Astronomy.SiderealTime(date); // hours
+  const gmstDeg = norm360(gmstHours * 15);
+  return norm360(gmstDeg + longitudeDeg);
+}
+
+// Ascendant longitude in degrees. The eastern ecliptic horizon point.
+// Earlier versions had a sign error here that returned the Descendant —
+// verified against Kw (Cap 10°23' rising) and Hubba (Aries 15°44' rising)
+// reference charts. The correct formula:
+//   ASC = atan2(cos(RAMC), -sin(RAMC)*cos(ε) - tan(φ)*sin(ε))
+function ascendantDeg(date, latitudeDeg, longitudeDeg) {
+  const LST = localSiderealTimeDeg(date, longitudeDeg);
+  const eps = meanObliquityDeg(date);
+  const toRad = Math.PI/180, toDeg = 180/Math.PI;
+  const ramc = LST * toRad;
+  const e = eps * toRad;
+  const phi = latitudeDeg * toRad;
+  const y =  Math.cos(ramc);
+  const x = -Math.sin(ramc) * Math.cos(e) - Math.tan(phi) * Math.sin(e);
+  let asc = Math.atan2(y, x) * toDeg;
+  return norm360(asc);
+}
+
+// Midheaven (10th house cusp / MC) longitude in degrees
+function midheavenDeg(date, longitudeDeg) {
+  const LST = localSiderealTimeDeg(date, longitudeDeg);
+  const eps = meanObliquityDeg(date);
+  const toRad = Math.PI/180, toDeg = 180/Math.PI;
+  const ramc = LST * toRad;
+  const e = eps * toRad;
+  let mc = Math.atan2(Math.sin(ramc), Math.cos(ramc) * Math.cos(e)) * toDeg;
+  return norm360(mc);
+}
+
+// Right ascension from ecliptic longitude (assumes β = 0)
+function raFromLon(lonDeg, epsDeg) {
+  const r = Math.PI/180;
+  return norm360(Math.atan2(Math.sin(lonDeg*r) * Math.cos(epsDeg*r), Math.cos(lonDeg*r)) * 180/Math.PI);
+}
+// Ecliptic longitude from RA (assumes β = 0)
+function lonFromRA(raDeg, epsDeg) {
+  const r = Math.PI/180;
+  return norm360(Math.atan2(Math.sin(raDeg*r), Math.cos(raDeg*r) * Math.cos(epsDeg*r)) * 180/Math.PI);
+}
+// Declination of an ecliptic point (β = 0)
+function declFromLon(lonDeg, epsDeg) {
+  const r = Math.PI/180;
+  return Math.asin(Math.sin(epsDeg*r) * Math.sin(lonDeg*r)) * 180/Math.PI;
+}
+
+// Placidus house cusps — true time-trisection of the diurnal/nocturnal
+// semi-arcs. Iterates because DSA depends on declination which depends on λ.
+function placidusCusps(date, latDeg, lonGeoDeg, ascLon, mcLon) {
+  const eps = meanObliquityDeg(date);
+  const ramcDeg = localSiderealTimeDeg(date, lonGeoDeg);
+  const phi = latDeg * Math.PI/180;
+
+  const cusps = new Array(12);
+  cusps[0] = ascLon;
+  cusps[3] = norm360(mcLon + 180);
+  cusps[6] = norm360(ascLon + 180);
+  cusps[9] = mcLon;
+
+  // Each intermediate cusp's target RA expressed in terms of DSA (Diurnal Semi-Arc).
+  const targetByHouse = {
+    11: dsa => ramcDeg + dsa/3,
+    12: dsa => ramcDeg + 2*dsa/3,
+    8:  dsa => ramcDeg - 2*dsa/3,
+    9:  dsa => ramcDeg - dsa/3,
+    2:  dsa => ramcDeg + 60 + 2*dsa/3,
+    3:  dsa => ramcDeg + 120 + dsa/3,
+    5:  dsa => ramcDeg + 240 - dsa/3,
+    6:  dsa => ramcDeg + 300 - 2*dsa/3,
+  };
+  const cuspIdx = { 2:1, 3:2, 5:4, 6:5, 8:7, 9:8, 11:10, 12:11 };
+
+  for (const h of [11, 12, 9, 8, 2, 3, 5, 6]) {
+    const target = targetByHouse[h];
+    let lon = lonFromRA(norm360(target(90)), eps); // initial guess assuming DSA = 90°
+    for (let i = 0; i < 30; i++) {
+      const decl = declFromLon(lon, eps) * Math.PI/180;
+      let c = -Math.tan(decl) * Math.tan(phi);
+      c = Math.max(-0.9999, Math.min(0.9999, c));
+      const dsa = Math.acos(c) * 180/Math.PI;
+      const newLon = lonFromRA(norm360(target(dsa)), eps);
+      const diff = Math.abs(((newLon - lon + 540) % 360) - 180);
+      lon = newLon;
+      if (diff < 1e-5) break;
+    }
+    cusps[cuspIdx[h]] = lon;
+  }
+  return cusps;
+}
+
+// Porphyry house cusps — close to Placidus, much simpler to compute.
+// Trisects each quadrant between the angular cusps (ASC/IC/DSC/MC).
+function porphyryCusps(ascLon, mcLon) {
+  const cusps = new Array(12);
+  cusps[0] = norm360(ascLon);          // House 1 (ASC)
+  cusps[3] = norm360(mcLon + 180);     // House 4 (IC)
+  cusps[6] = norm360(ascLon + 180);    // House 7 (DSC)
+  cusps[9] = norm360(mcLon);           // House 10 (MC)
+  const arcs = [
+    (cusps[3] - cusps[0] + 360) % 360, // H1 → H4
+    (cusps[6] - cusps[3] + 360) % 360, // H4 → H7
+    (cusps[9] - cusps[6] + 360) % 360, // H7 → H10
+    (cusps[0] - cusps[9] + 360) % 360, // H10 → H1
+  ];
+  cusps[1]  = norm360(cusps[0] + arcs[0]/3);
+  cusps[2]  = norm360(cusps[0] + 2*arcs[0]/3);
+  cusps[4]  = norm360(cusps[3] + arcs[1]/3);
+  cusps[5]  = norm360(cusps[3] + 2*arcs[1]/3);
+  cusps[7]  = norm360(cusps[6] + arcs[2]/3);
+  cusps[8]  = norm360(cusps[6] + 2*arcs[2]/3);
+  cusps[10] = norm360(cusps[9] + arcs[3]/3);
+  cusps[11] = norm360(cusps[9] + 2*arcs[3]/3);
+  return cusps;
+}
+
+// ---------- ASPECT DETECTION ----------
+function detectAspects(positionsA, positionsB) {
+  // If positionsB is null, compute aspects within positionsA (natal)
+  const keys = Object.keys(positionsA);
+  const out = [];
+  if (!positionsB) {
+    for (let i=0;i<keys.length;i++) {
+      for (let j=i+1;j<keys.length;j++) {
+        const a = keys[i], b = keys[j];
+        const angle = Math.abs(((positionsA[a] - positionsA[b]) + 540) % 360 - 180);
+        // angle is 0..180
+        for (const asp of ASPECTS) {
+          const diff = Math.abs(angle - asp.angle);
+          if (diff <= asp.orb) {
+            out.push({ p1:a, p2:b, aspect:asp.name, orb:diff.toFixed(1), tone:asp.tone, flavor:asp.flavor });
+          }
+        }
+      }
+    }
+  } else {
+    const keys2 = Object.keys(positionsB);
+    for (const a of keys) {
+      for (const b of keys2) {
+        const angle = Math.abs(((positionsA[a] - positionsB[b]) + 540) % 360 - 180);
+        for (const asp of ASPECTS) {
+          const diff = Math.abs(angle - asp.angle);
+          if (diff <= asp.orb) {
+            out.push({ p1:a, p2:b, aspect:asp.name, orb:diff.toFixed(1), tone:asp.tone, flavor:asp.flavor });
+          }
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// ---------- NATAL ASPECT INTERPRETATION ----------
+function natalAspectInterp(p1, p2, aspect) {
+  const k = `${p1}-${p2}`;
+  const tableByPair = {
+    'Sun-Moon':         { Conjunction:'Inner sense of self and emotional needs point the same direction — you read as integrated.',
+                          Opposition:'Inner identity and emotional needs pull in opposite directions — you can feel "two selves."',
+                          Trine:'Identity and emotions flow easily; you tend to feel like yourself.',
+                          Square:'Tension between who you are and what makes you feel safe — productive friction.',
+                          Sextile:'Easy access between identity and emotion; you can articulate how you feel.' },
+    'Sun-Mercury':      { Conjunction:'You think out loud as who you are — your ideas and identity are tightly fused.' },
+    'Sun-Venus':        { Conjunction:'You lead with warmth and taste; charisma and identity are linked.' },
+    'Sun-Mars':         { Conjunction:'High drive — you act on identity directly; can come across forceful.',
+                          Square:'You can battle your own impulses; quick to anger and quick to recover.',
+                          Trine:'Action and identity aligned — confident initiative.' },
+    'Sun-Saturn':       { Conjunction:'You take yourself seriously; can be hard on yourself, but disciplined.',
+                          Square:'Authority/self-doubt friction — you push through by earning it.',
+                          Trine:'Quiet, durable confidence; you build slowly and outlast.' },
+    'Moon-Mercury':     { Conjunction:'You feel and think at the same time — emotions get articulated quickly.',
+                          Square:'Your head and your gut often disagree; you re-read your own emotions.' },
+    'Moon-Venus':       { Conjunction:'Warm, affectionate emotional style; you feel best when liked.' },
+    'Moon-Mars':        { Conjunction:'Reactive emotional style; quick fuse, quick recovery.',
+                          Square:'You can be moody and combative under pressure; energy needs an outlet.' },
+    'Moon-Saturn':      { Conjunction:'Reserved emotional style; you handle feelings by handling things.',
+                          Square:'Old patterns of "no one\'s coming to help" — you carry a lot quietly.' },
+    'Mercury-Venus':    { Conjunction:'You communicate with charm and taste; great at writing and rapport.' },
+    'Mercury-Mars':     { Conjunction:'Sharp, fast, can-cut tongue; great in debate.' },
+    'Mercury-Saturn':   { Conjunction:'Slow, precise thinker; great with structure and detail.' },
+    'Mercury-Jupiter':  { Conjunction:'Big-idea communicator; can over-promise on details.' },
+    'Venus-Mars':       { Conjunction:'Chemistry built in — you pursue what you value directly.' },
+    'Venus-Saturn':     { Conjunction:'Cautious in love and money; serious, loyal, slow to commit.' },
+    'Mars-Jupiter':     { Conjunction:'Big appetite, big bets, big momentum.' },
+    'Mars-Saturn':      { Conjunction:'Disciplined action; can be hard on yourself when stuck.',
+                          Square:'Stop-go pattern — drive vs. restriction; learn to pace.' },
+    'Jupiter-Saturn':   { Conjunction:'Big plans grounded in long timelines; "patient ambition."' },
+  };
+  // Try both orderings
+  let entry = tableByPair[k] || tableByPair[`${p2}-${p1}`];
+  if (entry && entry[aspect]) return entry[aspect];
+  // Generic fallback
+  const planetTheme = pl => (PLANETS.find(p=>p.key===pl)||{}).theme || pl;
+  const aspMap = {
+    Conjunction:'fuses with',
+    Opposition: 'pulls against',
+    Trine:      'flows easily with',
+    Square:     'creates friction with',
+    Sextile:    'opens an opportunity with',
+  };
+  return `Your ${p1.toLowerCase()} (${planetTheme(p1).split(',')[0]}) ${aspMap[aspect]} your ${p2.toLowerCase()} (${planetTheme(p2).split(',')[0]}).`;
+}
+
+// ---------- SYNASTRY (WORK) INTERPRETATION ----------
+// Templates use {1} = owner of the first planet (alphabetically) in the pair
+// key, {2} = owner of the second planet. Keys are sorted alphabetically so
+// the lookup is order-independent. (The old version had unsorted keys, so
+// most lookups silently fell through to the generic fallback.)
+const SYNASTRY_LIB = {
+  // Same-planet pairs
+  'Sun-Sun': {
+    good:    '{1} and {2} read each other\'s working style instinctively. Risk: too similar — they may miss each other\'s blind spots.',
+    tense:   '{1} and {2} approach work from fundamentally different identities. If they respect the difference, they cover each other\'s gaps; if not, ego clashes.',
+    neutral: 'Strong identity overlap — {1} and {2} take the same things seriously at work.'
+  },
+  'Mercury-Mercury': {
+    good:    '{1} and {2} think alike — fast, low-friction communication.',
+    tense:   'Different processing speeds and styles between {1} and {2} — meetings need agendas and written follow-ups.',
+    neutral: 'High communication compatibility.'
+  },
+  'Venus-Venus': {
+    good:    'Shared taste between {1} and {2} — easy alignment on brand, design, hiring "fit."',
+    tense:   'Different aesthetic and value standards; expect friction on tone, design, perks.',
+    neutral: 'Strong taste alignment.'
+  },
+  'Mars-Mars': {
+    good:    '{1} and {2} are aligned on how they fight for outcomes; great execution duo.',
+    tense:   'Two strong drives = competition; {1} and {2} need separate sandboxes or clearly different scopes.',
+    neutral: 'High activity, high output pairing.'
+  },
+  'Saturn-Saturn': {
+    good:    '{1} and {2} share a sense of duty and structure — they can build something multi-year together.',
+    tense:   '{1} and {2} trigger each other\'s authority issues; tread carefully on hierarchy moves.',
+    neutral: 'Same gear, same patience.'
+  },
+
+  // Cross pairs — alphabetically sorted keys
+  'Mercury-Sun': {   // {1} = Mercury owner, {2} = Sun owner
+    good:    '{1} helps {2} articulate what {2} is really trying to do. Natural "leader + chief of staff" rapport.',
+    tense:   '{1} questions or reframes {2}\'s decisions in a way {2} can find irritating — but useful if {2} can hear it.',
+    neutral: '{1}\'s thinking style closely matches {2}\'s sense of self — easy briefing rapport.'
+  },
+  'Sun-Venus': {     // {1} = Sun, {2} = Venus
+    good:    'Warm, easy working relationship; {1} and {2} genuinely like each other, which lubricates everything.',
+    tense:   'Different standards of "what good looks like" between {1} and {2}; aesthetics, comp, or recognition can be a quiet sticking point.',
+    neutral: 'Pleasant chemistry — meetings feel lighter than they otherwise would.'
+  },
+  'Mars-Sun': {      // {1} = Mars, {2} = Sun
+    good:    '{1} energizes {2}\'s direction; great execution pairing.',
+    tense:   '{1}\'s drive can feel pushy or competitive to {2}; can spark turf battles. Channel the heat into shared targets.',
+    neutral: 'High-energy pairing — get things done, but watch for dominance moves.'
+  },
+  'Jupiter-Sun': {   // {1} = Jupiter, {2} = Sun
+    good:    '{1} expands {2}\'s confidence and ambition. Great mentor/sponsor dynamic.',
+    tense:   '{1} can talk {2} into overcommitting; over-promising risk.',
+    neutral: 'Optimistic, growth-oriented relationship.'
+  },
+  'Saturn-Sun': {    // {1} = Saturn, {2} = Sun
+    good:    '{1} brings structure and gravitas that {2} respects. Strong manager-IC or board-CEO dynamic.',
+    tense:   '{1} can feel like the parent/critic to {2}; {2} can feel boxed in. With trust this becomes "tough but fair."',
+    neutral: 'Serious, accountability-heavy dynamic between {1} and {2}.'
+  },
+  'Mars-Mercury': {  // {1} = Mars, {2} = Mercury
+    good:    'Sharp, fast decisions between {1} and {2}; great for sales calls, negotiations, debate.',
+    tense:   'Conversations between {1} and {2} escalate quickly into arguments; use writing for high-stakes topics.',
+    neutral: 'High-bandwidth, direct communication.'
+  },
+  'Jupiter-Mercury': { // {1} = Jupiter, {2} = Mercury
+    good:    'Idea generation supercharger between {1} and {2}; great for strategy, content, fundraising.',
+    tense:   'Big claims without backup; assign someone to fact-check.',
+    neutral: '{1} and {2} inflate each other\'s ideas (mostly in a good way).'
+  },
+  'Mercury-Saturn': { // {1} = Mercury, {2} = Saturn
+    good:    'Precise, disciplined thinking between {1} and {2} — great for ops, legal, audit, planning.',
+    tense:   'One of {1} or {2} feels micromanaged or pedantic; agree on what level of detail matters.',
+    neutral: 'Structured, careful communication.'
+  },
+  'Mercury-Uranus': { // {1} = Mercury, {2} = Uranus
+    good:    'Surprising, original thinking pops out of {1} and {2}\'s conversations.',
+    tense:   '{2} disrupts {1}\'s thinking in ways that feel destabilizing; use it for brainstorming, not decisions.',
+    neutral: 'Unconventional ideation pairing.'
+  },
+  'Mars-Venus': {     // {1} = Mars, {2} = Venus
+    good:    'High rapport between {1} and {2} — careful in romantic settings, but at work it shows up as natural chemistry and energy.',
+    tense:   'Mixed signals about working closeness between {1} and {2} — can blur the professional/personal line.',
+    neutral: 'Natural chemistry; keep professional norms explicit if {1} and {2} work closely.'
+  },
+  'Saturn-Venus': {   // {1} = Saturn, {2} = Venus
+    good:    'Mature, loyal collaboration between {1} and {2}; they back each other in serious moments.',
+    tense:   'Cold or transactional patches; one of {1} or {2} can feel undervalued.',
+    neutral: 'Long-haul, committed working bond.'
+  },
+  'Jupiter-Mars': {   // {1} = Jupiter, {2} = Mars
+    good:    'Big bets executed with confidence between {1} and {2}; growth-mode dream team.',
+    tense:   'Overcommitment risk; {1} and {2} both push for "more" and skip risk review.',
+    neutral: 'Ambition-multiplier pairing.'
+  },
+  'Mars-Saturn': {    // {1} = Mars, {2} = Saturn
+    good:    'Disciplined execution — {1}\'s drive meets {2}\'s structure. Excellent on operations, deadlines, builds.',
+    tense:   'Gas-and-brake fights between {1} and {2}: one wants to go, the other wants more rigor. Useful tension if they name it.',
+    neutral: 'Productive pressure.'
+  },
+  'Jupiter-Saturn': { // {1} = Jupiter, {2} = Saturn
+    good:    'Big vision from {1} meets long-game patience from {2} — classic founder + COO pairing.',
+    tense:   'Expansion vs. caution debates between {1} and {2}; agree on the timeline so it doesn\'t become personal.',
+    neutral: 'Strategic, durable.'
+  },
+};
+
+function workSynastryInterp(pA, pB, aspect, nameA, nameB) {
+  const harmonious = (aspect === 'Trine' || aspect === 'Sextile' || aspect === 'Conjunction');
+  const friction   = (aspect === 'Square' || aspect === 'Opposition');
+
+  const sorted = [pA, pB].slice().sort();
+  const pair = sorted.join('-');
+  // {1} = owner of the alphabetically-first planet in this pair
+  const n1 = (pA === sorted[0]) ? nameA : nameB;
+  const n2 = (pA === sorted[0]) ? nameB : nameA;
+
+  const entry = SYNASTRY_LIB[pair];
+  if (entry) {
+    let text;
+    if (harmonious && entry.good) text = entry.good;
+    else if (friction && entry.tense) text = entry.tense;
+    else text = entry.neutral || entry.good || entry.tense;
+    if (text) return text.replace(/\{1\}/g, n1).replace(/\{2\}/g, n2);
+  }
+
+  const themesByPlanet = {
+    Sun:'identity', Moon:'emotional read', Mercury:'communication',
+    Venus:'taste/values', Mars:'drive', Jupiter:'expansion',
+    Saturn:'structure', Uranus:'disruption', Neptune:'vision', Pluto:'power'
+  };
+  const t1 = themesByPlanet[pA], t2 = themesByPlanet[pB];
+  if (harmonious)
+    return `${nameA}'s ${t1} flows easily with ${nameB}'s ${t2} — natural alignment here.`;
+  if (friction)
+    return `${nameA}'s ${t1} creates productive friction with ${nameB}'s ${t2} — pay attention here.`;
+  return `${nameA}'s ${t1} fuses with ${nameB}'s ${t2} — they operate on the same wavelength here.`;
+}
+
+// ---------- COMPATIBILITY SCORE + OPENER ----------
+// Score in [0, 100], built from weighted aspects between personal + Saturn
+// planets. Tighter orbs count more; harmonious aspects add, friction subtracts.
+function computeCompatibilityScore(aspects) {
+  const personal  = new Set(['Sun','Moon','Mercury','Venus','Mars']);
+  const important = new Set(['Sun','Moon','Mercury','Venus','Mars','Saturn','Jupiter']);
+  let score = 50; // baseline
+  for (const a of aspects) {
+    if (!important.has(a.p1) || !important.has(a.p2)) continue;
+    const personalBoth = personal.has(a.p1) && personal.has(a.p2);
+    const orb = parseFloat(a.orb);
+    let maxOrb;
+    if (a.aspect === 'Conjunction' || a.aspect === 'Opposition') maxOrb = 8;
+    else if (a.aspect === 'Trine' || a.aspect === 'Square') maxOrb = 6;
+    else maxOrb = 4;
+    const weight = Math.max(0, 1 - orb / maxOrb);
+    const importance = personalBoth ? 1.0 : 0.6;
+    let delta = 0;
+    switch (a.aspect) {
+      case 'Trine':       delta =  7; break;
+      case 'Sextile':     delta =  4; break;
+      case 'Conjunction': delta =  3; break;
+      case 'Square':      delta = -6; break;
+      case 'Opposition':  delta = -4; break;
+    }
+    score += delta * weight * importance;
+  }
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+// Plain-English descriptions of what each planet represents in a work context
+const PLANET_PLAIN = {
+  Sun:     'core working style',
+  Moon:    'gut read on people and situations',
+  Mercury: 'thinking and communication style',
+  Venus:   'taste and what they value',
+  Mars:    'drive and how they push for things',
+  Jupiter: 'appetite for big bets and growth',
+  Saturn:  'discipline and what they take seriously',
+  Uranus:  'instinct to break the mold',
+  Neptune: 'imagination and intuition',
+  Pluto:   'intensity and depth of focus',
+};
+
+const FLOW_VERB = {
+  Trine:       'flows easily with',
+  Sextile:     'opens doors for',
+  Conjunction: 'merges with',
+};
+const TENSE_VERB = {
+  Square:      'clashes with',
+  Opposition:  'pulls against',
+  Conjunction: 'fuses tensely with',
+};
+
+function plainAspectSentence(a, nameA, nameB) {
+  const p1 = PLANET_PLAIN[a.p1] || a.p1.toLowerCase();
+  const p2 = PLANET_PLAIN[a.p2] || a.p2.toLowerCase();
+  const verb = a.tone === 'good'  ? (FLOW_VERB[a.aspect]  || 'works well with')
+             : a.tone === 'tense' ? (TENSE_VERB[a.aspect] || 'creates friction with')
+             :                       'merges with';
+  return `${nameA}'s ${p1} <i>${verb}</i> ${nameB}'s ${p2}`;
+}
+
+function synastryAdvice(score, flows, tensions, nameA, nameB) {
+  let general;
+  if (score >= 80) {
+    general = `Lean into the natural rapport, but keep at least one outside voice in the loop — alignment this strong can quietly become a shared blind spot. Schedule real debate sessions where someone plays devil's advocate.`;
+  } else if (score >= 65) {
+    general = `When friction shows up between ${nameA} and ${nameB}, treat it as the productive kind — talk through it instead of working around it. Standing 1:1s and explicit role clarity will keep small disagreements from compounding.`;
+  } else if (score >= 50) {
+    general = `Build clear roles in the areas where ${nameA} and ${nameB} clash, and lean on each other in the areas where they flow. Misalignment here needs naming, not avoiding — written decision logs and explicit ownership help a lot.`;
+  } else if (score >= 35) {
+    general = `Use structure to compensate for the lack of natural rhythm — agendas, written decisions, named expectations. The rapport won't carry this collaboration; the process has to.`;
+  } else {
+    general = `Keep collaborations between ${nameA} and ${nameB} well-scoped and short-cycle. This works best as occasional collaboration on defined deliverables, not as a tight day-to-day partnership.`;
+  }
+  // Add a specific nudge if there are notably more tensions than flows or vice versa
+  let extra = '';
+  if (tensions.length >= 2 && flows.length === 0) {
+    extra = ` With more friction than flow, the single biggest unlock is to assume the misalignment is real and design around it — don't try to talk each other into the same frame.`;
+  } else if (flows.length >= 2 && tensions.length === 0) {
+    extra = ` With this much natural flow, the trap is to skip the hard conversations because they don't surface — invent them on purpose.`;
+  }
+  return general + extra;
+}
+
+function synastryOpener(score, aspects, nameA, nameB) {
+  let band, vibe;
+  if (score >= 80) {
+    band = 'Very compatible';
+    vibe = `This is the kind of pairing that hums. ${nameA} and ${nameB} pick up each other's signals naturally, the energy reinforces itself, and they tend to make each other better at work without trying.`;
+  } else if (score >= 65) {
+    band = 'Strong fit';
+    vibe = `Mostly flowing chemistry between ${nameA} and ${nameB}, with a few real tensions worth naming. The friction here is the productive kind when they're willing to talk through it.`;
+  } else if (score >= 50) {
+    band = 'Workable with care';
+    vibe = `A mixed pairing — strong rapport in some areas, real friction in others. ${nameA} and ${nameB} can collaborate well if they build clear roles where they clash and lean on each other where they flow.`;
+  } else if (score >= 35) {
+    band = 'Challenging';
+    vibe = `More friction than flow. ${nameA} and ${nameB} can work together, but it'll take structure, patience, and named expectations. The strengths here are usually in covering each other's blind spots.`;
+  } else {
+    band = 'Difficult';
+    vibe = `Low natural compatibility. ${nameA} and ${nameB} can collaborate on specific, well-scoped tasks, but a comfortable working rhythm is unlikely without a lot of process scaffolding.`;
+  }
+
+  const flows = aspects.filter(a => a.tone === 'good')
+    .sort((a,b) => parseFloat(a.orb) - parseFloat(b.orb)).slice(0, 3);
+  const tensions = aspects.filter(a => a.tone === 'tense')
+    .sort((a,b) => parseFloat(a.orb) - parseFloat(b.orb)).slice(0, 3);
+
+  const fmt = a => plainAspectSentence(a, nameA, nameB);
+  const flowsStr = flows.length
+    ? `<p><b>Where it flows:</b> ${flows.map(fmt).join('; ')}.</p>` : '';
+  const tensionsStr = tensions.length
+    ? `<p><b>Where to be careful:</b> ${tensions.map(fmt).join('; ')}. Name these openly — they're where decisions stall or feelings get hurt.</p>` : '';
+  const adviceStr = `<p class="syn-advice"><b>Advice:</b> ${synastryAdvice(score, flows, tensions, nameA, nameB)}</p>`;
+
+  return `
+    <div class="syn-score">
+      <div class="syn-score-num">${score}<small>/100</small></div>
+      <div class="syn-score-label">${band}</div>
+    </div>
+    <p>${vibe}</p>
+    ${flowsStr}
+    ${tensionsStr}
+    ${adviceStr}
+  `;
+}
+
+// ---------- ARCHETYPE / BLURB ----------
+function archetypeFor(positions, ascLon, name) {
+  const sun = signOf(positions.Sun);
+  const moon = signOf(positions.Moon);
+  const asc = signOf(ascLon);
+
+  const sunArchetype = {
+    Aries:'Trailblazer', Taurus:'Builder', Gemini:'Connector',
+    Cancer:'Caretaker', Leo:'Performer', Virgo:'Craftsperson',
+    Libra:'Diplomat', Scorpio:'Strategist', Sagittarius:'Adventurer',
+    Capricorn:'Architect', Aquarius:'Visionary', Pisces:'Dreamer'
+  };
+  const moonAdj = {
+    Aries:'Quick-Fire', Taurus:'Grounded', Gemini:'Curious',
+    Cancer:'Tenderhearted', Leo:'Warm', Virgo:'Precise',
+    Libra:'Diplomatic', Scorpio:'Intense', Sagittarius:'Restless',
+    Capricorn:'Steady', Aquarius:'Independent', Pisces:'Intuitive'
+  };
+  const ascRead = {
+    Aries:'bold, direct, ready to move',
+    Taurus:'composed, unhurried, well-put-together',
+    Gemini:'chatty, animated, alive in conversation',
+    Cancer:'kind, a little guarded, attuned to mood',
+    Leo:'magnetic, warm, hard to miss',
+    Virgo:'precise, polished, observant',
+    Libra:'charming, diplomatic, easy to like',
+    Scorpio:'watchful, intense, hard to read at first',
+    Sagittarius:'blunt, big-energy, expansive',
+    Capricorn:'serious, professional, older than their years',
+    Aquarius:'cool, unconventional, hard to pin down',
+    Pisces:'soft, dreamy, gentle on the surface'
+  };
+  const moonNeed = {
+    Aries:'action and a clear outlet',
+    Taurus:'stability and unhurried time',
+    Gemini:'variety and conversation',
+    Cancer:'closeness with a small circle they trust',
+    Leo:'genuine appreciation and warmth',
+    Virgo:'order and being useful',
+    Libra:'harmony and steady partnership',
+    Scorpio:'depth, privacy, and earned trust',
+    Sagittarius:'freedom and a sense of meaning',
+    Capricorn:'structure and earned competence',
+    Aquarius:'space and intellectual stimulation',
+    Pisces:'solitude, art, and tenderness'
+  };
+  const sunFeel = {
+    Aries:'lives at the front of the line and gets restless in slow lanes',
+    Taurus:'builds slowly, refuses to be rushed, and values quality over speed',
+    Gemini:'thinks in connections and is hungry for new input',
+    Cancer:'leads with care and reads the room before they read the agenda',
+    Leo:'creates with warmth and wants to be seen for what they make',
+    Virgo:'improves the work and notices what everyone else missed',
+    Libra:'looks for fairness and the balance point in every room',
+    Scorpio:'goes deep, stays private, and plays the long game',
+    Sagittarius:'expands the frame and says the thing other people are tiptoeing around',
+    Capricorn:'plays the long game with patience and structure',
+    Aquarius:'questions the default and bets on the unconventional read',
+    Pisces:'tunes into the emotional and creative current others miss'
+  };
+
+  const title = `The ${moonAdj[moon.name]} ${sunArchetype[sun.name]}`;
+  const subtitle = `${sun.name} Sun · ${moon.name} Moon · ${asc.name} rising`;
+  const who = name && name.trim() ? name.trim() : 'This person';
+  const them = name && name.trim() ? 'them' : 'them';
+  const blurb = `${who} ${sunFeel[sun.name]}. First impression: ${ascRead[asc.name]}. Underneath the surface, what makes ${them} feel right is ${moonNeed[moon.name]} — that's the inner engine the outside doesn't always show.`;
+
+  return { title, subtitle, blurb };
+}
+
+// ---------- SVG CHART WHEEL ----------
+// Standard astrology direction: Ascendant on the left (9 o'clock).
+// Signs run counterclockwise on screen, so Taurus 8 o'clock, Cancer 6 (IC),
+// Libra 3 (DSC), Capricorn 12 (top, near MC). Houses are numbered CCW from
+// the ASC (House 1 just below the left horizon) using Porphyry cusps.
+function svgWheel(positions, ascLon, mcLon, cusps, aspects, rotationLon) {
+  const SIZE = 600, CX = 300, CY = 300;
+  const R_OUTER     = 288;  // outer rim
+  const R_NAME      = 270;  // sign name ring
+  const R_GLYPH     = 248;  // sign glyph ring
+  const R_ZOD_IN    = 228;  // inner edge of zodiac band
+  const R_PLANET    = 198;  // planet glyph base radius
+  const R_HOUSE_OUT = 168;  // outer edge of house wedges
+  const R_HSE_LABEL = 138;  // house number text
+  const R_HOUSE_IN  = 108;  // inner edge of house wedges
+  const R_ASPECT    = 104;  // aspect line endpoints
+
+  // CCW direction: as longitude increases, screen position moves CCW around
+  // the wheel. The wheel rotates so `rotationLon` sits at theta=180°
+  // (the 9 o'clock mark). For whole sign houses we pass the START of the
+  // ASC sign here, so H1 (the ASC sign) sits in the lower-left quadrant
+  // and the ASC marker points to the exact ASC degree inside it.
+  const toScreen = (lon, r) => {
+    const theta = (180 + (lon - rotationLon)) * Math.PI / 180;
+    return { x: CX + r * Math.cos(theta), y: CY - r * Math.sin(theta) };
+  };
+  const mathThetaDeg = lon => ((180 + (lon - rotationLon)) % 360 + 360) % 360;
+
+  // Element-based subtle tint for zodiac wedges
+  const elementTint = {
+    Fire:  'rgba(255,138,138,0.07)',
+    Earth: 'rgba(201,180,138,0.07)',
+    Air:   'rgba(122,217,199,0.06)',
+    Water: 'rgba(166,149,238,0.07)',
+  };
+
+  let svg = `<svg viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;">`;
+  svg += `<defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#3a2f5e"/>
+      <stop offset="55%"  stop-color="#1e1a36"/>
+      <stop offset="100%" stop-color="#14101e"/>
+    </radialGradient>
+    <radialGradient id="houseGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#221d36"/>
+      <stop offset="100%" stop-color="#15131e"/>
+    </radialGradient>
+    <filter id="planetGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+  // Discs
+  svg += `<circle cx="${CX}" cy="${CY}" r="${R_OUTER}" fill="url(#bgGrad)" stroke="#7a6ba6" stroke-width="1.5"/>`;
+  svg += `<circle cx="${CX}" cy="${CY}" r="${R_ZOD_IN}" fill="none" stroke="#5a4f7a" stroke-width="0.8"/>`;
+  svg += `<circle cx="${CX}" cy="${CY}" r="${R_HOUSE_OUT}" fill="url(#houseGrad)" stroke="#5a4f7a" stroke-width="0.8"/>`;
+  svg += `<circle cx="${CX}" cy="${CY}" r="${R_HOUSE_IN}" fill="none" stroke="#3b3552" stroke-width="0.6" stroke-dasharray="2 3"/>`;
+
+  // ---- Zodiac wedges (outer band) ----
+  for (let i = 0; i < 12; i++) {
+    const startLon = i * 30, endLon = (i + 1) * 30, midLon = startLon + 15;
+    const p1 = toScreen(startLon, R_OUTER);
+    const p2 = toScreen(endLon,   R_OUTER);
+    const p3 = toScreen(endLon,   R_ZOD_IN);
+    const p4 = toScreen(startLon, R_ZOD_IN);
+    // CCW direction (math theta increases with longitude) → outer arc sweep=0,
+    // inner arc sweep=1 on the way back.
+    svg += `<path d="M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${R_OUTER} ${R_OUTER} 0 0 0 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)} L ${p3.x.toFixed(1)} ${p3.y.toFixed(1)} A ${R_ZOD_IN} ${R_ZOD_IN} 0 0 1 ${p4.x.toFixed(1)} ${p4.y.toFixed(1)} Z" fill="${elementTint[SIGNS[i].element]}" stroke="#3b3552" stroke-width="0.6"/>`;
+
+    // Tangent sign name, auto-flipped to stay readable
+    const midTheta = mathThetaDeg(midLon);
+    let rot = -(midTheta - 90);          // SVG rotation for tangent text (CCW math)
+    while (rot > 180) rot -= 360;
+    while (rot <= -180) rot += 360;
+    if (rot > 90 || rot < -90) rot += 180;
+    while (rot > 180) rot -= 360;
+    const namePos = toScreen(midLon, R_NAME);
+    svg += `<text x="${namePos.x.toFixed(1)}" y="${(namePos.y + 4).toFixed(1)}" transform="rotate(${rot.toFixed(1)} ${namePos.x.toFixed(1)} ${namePos.y.toFixed(1)})" text-anchor="middle" font-size="11" letter-spacing="2.8" fill="#ffd9a8" font-family="sans-serif" font-weight="700">${SIGNS[i].name.toUpperCase()}</text>`;
+
+    // Hand-drawn sign glyph
+    const gPos = toScreen(midLon, R_GLYPH);
+    svg += chartGlyph(SIGNS[i].name, gPos.x, gPos.y, 26, '#ffb86b', 1.8);
+
+    // 5° tick marks along the inner edge of the zodiac band
+    for (let t = 0; t < 30; t += 5) {
+      const tick = toScreen(startLon + t, R_ZOD_IN);
+      const tickIn = toScreen(startLon + t, R_ZOD_IN - (t === 0 ? 9 : 4));
+      svg += `<line x1="${tick.x.toFixed(1)}" y1="${tick.y.toFixed(1)}" x2="${tickIn.x.toFixed(1)}" y2="${tickIn.y.toFixed(1)}" stroke="#7a6ba6" stroke-width="${t === 0 ? 1.4 : 0.6}" opacity="0.6"/>`;
+    }
+  }
+
+  // ---- House wedges (inner band) ----
+  for (let i = 0; i < 12; i++) {
+    const startLon = cusps[i];
+    const endLon = cusps[(i + 1) % 12];
+    // Width of this house in longitude (going CCW around the wheel)
+    const span = (endLon - startLon + 360) % 360 || 360;
+    const midLon = norm360(startLon + span / 2);
+    const isAngular = (i === 0 || i === 3 || i === 6 || i === 9);
+    const p1 = toScreen(startLon, R_HOUSE_OUT);
+    const p2 = toScreen(endLon,   R_HOUSE_OUT);
+    const p3 = toScreen(endLon,   R_HOUSE_IN);
+    const p4 = toScreen(startLon, R_HOUSE_IN);
+    const largeArc = span > 180 ? 1 : 0;
+    const fill = isAngular ? 'rgba(255,217,168,0.05)' : 'transparent';
+    svg += `<path d="M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${R_HOUSE_OUT} ${R_HOUSE_OUT} 0 ${largeArc} 0 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)} L ${p3.x.toFixed(1)} ${p3.y.toFixed(1)} A ${R_HOUSE_IN} ${R_HOUSE_IN} 0 ${largeArc} 1 ${p4.x.toFixed(1)} ${p4.y.toFixed(1)} Z" fill="${fill}" stroke="#3b3552" stroke-width="${isAngular ? 1 : 0.6}"/>`;
+    // Cusp line extending into the planet ring
+    const cuspOuter = toScreen(startLon, R_HOUSE_OUT);
+    const cuspInner = toScreen(startLon, R_HOUSE_IN);
+    svg += `<line x1="${cuspOuter.x.toFixed(1)}" y1="${cuspOuter.y.toFixed(1)}" x2="${cuspInner.x.toFixed(1)}" y2="${cuspInner.y.toFixed(1)}" stroke="${isAngular ? '#ffb86b' : '#5a4f7a'}" stroke-width="${isAngular ? 1.4 : 0.6}"/>`;
+    // House number
+    const lbl = toScreen(midLon, R_HSE_LABEL);
+    svg += `<text x="${lbl.x.toFixed(1)}" y="${(lbl.y + 5).toFixed(1)}" text-anchor="middle" font-size="13" fill="#b6aec5" font-family="serif" font-style="italic">${i + 1}</text>`;
+  }
+
+  // ---- Aspect lines (between planet positions, terminating inside houses) ----
+  for (const a of aspects) {
+    if (a.aspect === 'Conjunction') continue;
+    const s1 = toScreen(positions[a.p1], R_ASPECT);
+    const s2 = toScreen(positions[a.p2], R_ASPECT);
+    const color = a.tone === 'good' ? '#7ad9c7' : a.tone === 'tense' ? '#ff8a8a' : '#ffd479';
+    const dash  = (a.aspect === 'Square' || a.aspect === 'Opposition') ? '4 3' : '0';
+    svg += `<line x1="${s1.x.toFixed(1)}" y1="${s1.y.toFixed(1)}" x2="${s2.x.toFixed(1)}" y2="${s2.y.toFixed(1)}" stroke="${color}" stroke-width="1.2" stroke-dasharray="${dash}" opacity="0.65"/>`;
+  }
+
+  // ---- Planets (in the band between zodiac and houses) ----
+  const planetOrder = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'];
+  const sortedByLon = planetOrder.slice().sort((a,b) => positions[a] - positions[b]);
+  const offsets = {};
+  let lastLon = -999, tier = 0;
+  for (const k of sortedByLon) {
+    const lon = positions[k];
+    tier = (lon - lastLon < 8) ? tier + 1 : 0;
+    offsets[k] = tier;
+    lastLon = lon;
+  }
+  for (const k of planetOrder) {
+    const pl = PLANETS.find(p => p.key === k);
+    const lon = positions[k];
+    const r = R_PLANET - offsets[k] * 24;
+    const pos = toScreen(lon, r);
+    // Position tick on the inner edge of the zodiac band
+    const tickA = toScreen(lon, R_ZOD_IN);
+    const tickB = toScreen(lon, R_ZOD_IN - 10);
+    svg += `<line x1="${tickA.x.toFixed(1)}" y1="${tickA.y.toFixed(1)}" x2="${tickB.x.toFixed(1)}" y2="${tickB.y.toFixed(1)}" stroke="${pl.color}" stroke-width="1.6" opacity="0.85"/>`;
+    // Planet disc + hand-drawn glyph
+    svg += `<circle cx="${pos.x.toFixed(1)}" cy="${pos.y.toFixed(1)}" r="16" fill="#1e1b2c" stroke="${pl.color}" stroke-width="1.4" filter="url(#planetGlow)"/>`;
+    svg += chartGlyph(pl.key, pos.x, pos.y, 22, pl.color, 1.7);
+    // Tiny degree label below glyph
+    const degLbl = Math.floor(degInSign(lon));
+    svg += `<text x="${pos.x.toFixed(1)}" y="${(pos.y + 24).toFixed(1)}" text-anchor="middle" font-size="9" fill="${pl.color}" font-family="sans-serif" opacity="0.85">${degLbl}°</text>`;
+  }
+
+  // ---- Angular markers: ASC, IC, DSC, MC ----
+  const markAngle = (lon, label, side) => {
+    const inner = toScreen(lon, R_OUTER);
+    const outer = toScreen(lon, R_OUTER + 14);
+    let out = '';
+    // Arrow line from inside band pointing outward
+    out += `<line x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}" stroke="#ffd9a8" stroke-width="2"/>`;
+    // Label, placed just outside, oriented horizontally
+    const labelPos = toScreen(lon, R_OUTER + 22);
+    out += `<text x="${labelPos.x.toFixed(1)}" y="${(labelPos.y + 4).toFixed(1)}" text-anchor="middle" font-size="11" fill="#ffd9a8" font-family="sans-serif" font-weight="700" letter-spacing="0.1em">${label}</text>`;
+    return out;
+  };
+  svg += markAngle(ascLon, 'ASC');
+  svg += markAngle(norm360(ascLon + 180), 'DSC');
+  svg += markAngle(mcLon, 'MC');
+  svg += markAngle(norm360(mcLon + 180), 'IC');
+
+  svg += `</svg>`;
+  return svg;
+}
+
+// ---------- RENDERING ----------
+function renderNatal(name, jsDate, lat, lon, tzInfo, houseSystem) {
+  houseSystem = houseSystem || 'wholesign';
+  const positions = planetPositions(jsDate);
+  const ascLon = ascendantDeg(jsDate, lat, lon);
+  const mcLon  = midheavenDeg(jsDate, lon);
+  // House cusps + chart-rotation reference depend on the chosen system:
+  //   Whole Sign → H1 = entire ASC sign, rotation = start of ASC sign (9 o'clock = sign boundary)
+  //   Placidus   → H1 starts at the exact ASC degree, rotation = ASC degree itself (9 o'clock = ASC)
+  let cusps, rotationLon, houseLabel;
+  if (houseSystem === 'placidus') {
+    cusps = placidusCusps(jsDate, lat, lon, ascLon, mcLon);
+    rotationLon = ascLon;
+    houseLabel = 'Placidus';
+  } else {
+    const signStartLon = Math.floor(ascLon / 30) * 30;
+    cusps = Array.from({ length: 12 }, (_, i) => norm360(signStartLon + i * 30));
+    rotationLon = signStartLon;
+    houseLabel = 'Whole Sign';
+  }
+  const ascSign = signOf(ascLon);
+  const aspects = detectAspects(positions, null);
+
+  // Summary line
+  const sunSign = signOf(positions.Sun);
+  const moonSign = signOf(positions.Moon);
+  const summary = `${name||'This person'}: <b>${sunSign.name} Sun</b>, <b>${moonSign.name} Moon</b>, <b>${ascSign.name} rising</b>. Reads as someone who <i>${sunSign.keywords.split(',')[0]}</i> on the surface, needs <i>${moonSign.keywords.split(',')[0]}</i> emotionally, and presents to the world as <i>${ascSign.keywords.split(',')[0]}</i>.`;
+
+  const arche = archetypeFor(positions, ascLon, name);
+
+  let html = `<section class="card">`;
+  html += `<h2>${name ? name + '’s' : 'Your'} natal chart</h2>`;
+  html += `<div class="hero">
+    <div class="hero-chart">
+      ${svgWheel(positions, ascLon, mcLon, cusps, aspects, rotationLon)}
+      <div class="chart-legend">solid lines = easy aspects · dashed = tension · ASC marks the horizon at birth</div>
+    </div>
+    <div class="hero-text">
+      <div class="archetype">${arche.title}<small>${arche.subtitle}</small></div>
+      <div class="blurb">${arche.blurb}</div>
+    </div>
+  </div>`;
+  html += `<div class="summary">${summary}</div>`;
+  html += `<span class="ascendant">Ascendant: <b>${ascSign.name}</b> ${fmtDeg(ascLon)}</span>`;
+  html += `<span class="ascendant">Midheaven: <b>${signOf(mcLon).name}</b> ${fmtDeg(mcLon)}</span>`;
+
+  // ----- About this person -----
+  html += `<h3>About ${name && name.trim() ? name.trim() : 'this person'}</h3>`;
+  html += aboutParagraph(positions, ascLon, cusps, name);
+
+  // ----- Planetary placement table -----
+  html += `<h3>Planetary placements</h3>`;
+  html += `<table><thead><tr><th></th><th>Planet</th><th>Sign</th><th>House</th><th>Position</th></tr></thead><tbody>`;
+  for (const pl of PLANETS) {
+    const lonp = positions[pl.key];
+    const s = signOf(lonp);
+    const h = houseOf(lonp, cusps);
+    html += `<tr>
+      <td>${htmlGlyph(pl.key, 20, pl.color)}</td>
+      <td class="pl-name">${pl.label}</td>
+      <td>${htmlGlyph(s.name, 16, '#ffb86b')} <span class="sign">${s.name}</span></td>
+      <td>${h}</td>
+      <td>${fmtDeg(lonp)}</td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+
+  // ----- House cusp table -----
+  html += `<h3>House cusps (${houseLabel})</h3>`;
+  html += `<table><thead><tr><th>House</th><th>Cusp</th></tr></thead><tbody>`;
+  const angularLabels = { 1: ' (ASC)', 4: ' (IC)', 7: ' (DSC)', 10: ' (MC)' };
+  for (let i = 0; i < 12; i++) {
+    const cuspLon = cusps[i];
+    const cuspSign = signOf(cuspLon);
+    html += `<tr>
+      <td><b>${i + 1}</b><span class="deg">${angularLabels[i + 1] || ''}</span></td>
+      <td>${fmtDeg(cuspLon)} ${htmlGlyph(cuspSign.name, 16, '#ffb86b')} ${cuspSign.name}</td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+  if (tzInfo) {
+    const sign = tzInfo.offsetHours >= 0 ? '+' : '-';
+    const absH = Math.abs(tzInfo.offsetHours);
+    const h = Math.floor(absH);
+    const m = Math.round((absH - h) * 60);
+    const fmtOff = `UTC${sign}${h}${m ? ':' + String(m).padStart(2,'0') : ''}`;
+    html += `<span class="ascendant">Detected timezone: <b>${tzInfo.zone}</b> (${fmtOff}${tzInfo.fallback ? ' · estimated' : ''})</span>`;
+  }
+  html += `<h3>Planet-by-planet, in plain English</h3>`;
+  html += `<table><thead><tr><th>Planet</th><th>Sign</th><th>House</th><th>What it means in everyday terms</th></tr></thead><tbody>`;
+  for (const pl of PLANETS) {
+    const lon = positions[pl.key];
+    const s = signOf(lon);
+    const h = houseOf(lon, cusps);
+    const interp = (INTERP[pl.key] && INTERP[pl.key][s.name]) || '';
+    html += `<tr>
+      <td>${htmlGlyph(pl.key, 20, pl.color)} <span class="pl-name">${pl.label}</span><div class="deg">${pl.theme}</div></td>
+      <td>${htmlGlyph(s.name, 18, '#ffb86b')} <span class="sign">${s.name}</span><div class="deg">${fmtDeg(lon)} · ${s.element}/${s.mode}</div></td>
+      <td><b>${ordinal(h)}</b><div class="deg">${HOUSE_THEMES[h]}</div></td>
+      <td class="interp">${interp}</td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+
+  // ----- At work blurb -----
+  html += `<h3>${name && name.trim() ? name.trim() + ' at work' : 'Them at work'}</h3>`;
+  html += atWorkParagraph(positions, cusps, aspects, name);
+
+  // ----- Possible careers / job fit -----
+  html += `<h3>Possible careers and job fit</h3>`;
+  html += careersSection(positions, mcLon, cusps, name);
+
+  // Aspects
+  html += `<h3>Major aspects (how their planets talk to each other)</h3>`;
+  if (aspects.length === 0) {
+    html += `<p class="small-note">No major aspects within tight orbs — unusual but it happens.</p>`;
+  } else {
+    html += `<table><thead><tr><th>Connection</th><th>Aspect</th><th>What it means</th></tr></thead><tbody>`;
+    // Sort by orb (tightest first)
+    aspects.sort((a,b)=>parseFloat(a.orb)-parseFloat(b.orb));
+    for (const a of aspects) {
+      const toneClass = a.tone==='good'?'aspect-good':a.tone==='tense'?'aspect-tense':'aspect-neutral';
+      const c1 = (PLANETS.find(p=>p.key===a.p1)||{}).color || '#ffb86b';
+      const c2 = (PLANETS.find(p=>p.key===a.p2)||{}).color || '#ffb86b';
+      html += `<tr>
+        <td>${htmlGlyph(a.p1, 18, c1)} <b>${a.p1}</b> ↔ ${htmlGlyph(a.p2, 18, c2)} <b>${a.p2}</b></td>
+        <td class="${toneClass}">${a.aspect}<span class="badge">orb ${a.orb}°</span></td>
+        <td>${natalAspectInterp(a.p1, a.p2, a.aspect)}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+    html += `<div class="legend">Tight orb = stronger effect. <span class="aspect-good">Trine/Sextile</span> = easy. <span class="aspect-tense">Square/Opposition</span> = friction (often productive). <span class="aspect-neutral">Conjunction</span> = fusion — depends on the planets.</div>`;
+  }
+
+  html += `<details><summary>Show raw chart data</summary><pre style="white-space:pre-wrap;font-size:12px;color:var(--muted);">${
+    PLANETS.map(p=>`${p.label.padEnd(8)} ${signOf(positions[p.key]).name.padEnd(12)} ${fmtDeg(positions[p.key])}`).join('\n')
+    + `\nAsc      ${ascSign.name.padEnd(12)} ${fmtDeg(ascLon)}`
+    + `\nMC       ${signOf(mcLon).name.padEnd(12)} ${fmtDeg(mcLon)}`
+  }</pre></details>`;
+  html += `<div class="actions no-print"><button type="button" class="primary" onclick="window.print()">Save as PDF</button><span class="small-note" style="align-self:center">Opens your browser's print dialog — choose "Save as PDF" as the destination.</span></div>`;
+  html += `</section>`;
+  return { html, positions, ascLon };
+}
+
+function renderSynastry(nameA, nameB, posA, posB) {
+  const A = nameA && nameA.trim() ? nameA.trim() : 'Person A';
+  const B = nameB && nameB.trim() ? nameB.trim() : 'Person B';
+  const aspects = detectAspects(posA, posB);
+  const personal = new Set(['Sun','Moon','Mercury','Venus','Mars']);
+  const workRelevant = aspects.filter(a => personal.has(a.p1) || personal.has(a.p2));
+  workRelevant.sort((a,b)=>parseFloat(a.orb)-parseFloat(b.orb));
+
+  let html = `<section class="card">`;
+  html += `<h2>Work synastry: ${A} × ${B}</h2>`;
+
+  // Score + opener (replaces the old vibe summary and bottom-line block)
+  const score = computeCompatibilityScore(aspects);
+  html += synastryOpener(score, workRelevant, A, B);
+
+  html += `<h3>Where ${A} and ${B} connect (planet by planet)</h3>`;
+  if (workRelevant.length === 0) {
+    html += `<p class="small-note">No tight major aspects between personal planets — the relationship may feel "fine but flat," low chemistry but also low friction.</p>`;
+  } else {
+    html += `<table><thead><tr><th>${A}'s planet</th><th>${B}'s planet</th><th>Aspect</th><th>What it tends to look like at work</th></tr></thead><tbody>`;
+    for (const a of workRelevant) {
+      const tc = a.tone==='good'?'aspect-good':a.tone==='tense'?'aspect-tense':'aspect-neutral';
+      const planetA = PLANETS.find(p=>p.key===a.p1);
+      const planetB = PLANETS.find(p=>p.key===a.p2);
+      html += `<tr>
+        <td>${htmlGlyph(a.p1, 18, planetA.color)} <b>${a.p1}</b></td>
+        <td>${htmlGlyph(a.p2, 18, planetB.color)} <b>${a.p2}</b></td>
+        <td class="${tc}">${a.aspect}<span class="badge">orb ${a.orb}°</span></td>
+        <td>${workSynastryInterp(a.p1, a.p2, a.aspect, A, B)}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+  }
+
+  // Quick sign-element compatibility
+  const elemCount = {Fire:0,Earth:0,Air:0,Water:0};
+  ['Sun','Moon','Mercury','Venus','Mars'].forEach(k => {
+    elemCount[signOf(posA[k]).element]++;
+    elemCount[signOf(posB[k]).element]++;
+  });
+  html += `<details><summary>Show element balance across both charts (Sun, Moon, Mercury, Venus, Mars)</summary>
+    <p class="small-note">Fire: ${elemCount.Fire} · Earth: ${elemCount.Earth} · Air: ${elemCount.Air} · Water: ${elemCount.Water}. A balanced spread tends to mean you cover each other\'s blind spots; a heavy lean means you share strengths but share blind spots too.</p></details>`;
+
+  html += `</section>`;
+  return html;
+}
+
+// ---------- GEOCODING + TIMEZONE (with polite caching) ----------
+// We cache geocode + timezone lookups in localStorage to be a good citizen of
+// the free OSM/Nominatim and timeapi.io services. Cache lives 30 days.
+const CACHE_TTL_MS = 30 * 24 * 3600 * 1000;
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj._t || (Date.now() - obj._t) > CACHE_TTL_MS) return null;
+    delete obj._t;
+    return obj;
+  } catch (e) { return null; }
+}
+function writeCache(key, value) {
+  try { localStorage.setItem(key, JSON.stringify({ ...value, _t: Date.now() })); }
+  catch (e) { /* full or disabled — ignore */ }
+}
+
+// Simple per-call timeout so a hung API never blocks the UI forever.
+function fetchWithTimeout(url, opts, ms) {
+  ms = ms || 8000;
+  return Promise.race([
+    fetch(url, opts || {}),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ]);
+}
+
+async function geocode(city) {
+  const key = 'geocode:' + city.toLowerCase().trim();
+  const cached = readCache(key);
+  if (cached) return cached;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(city)}`;
+  // Nominatim's usage policy is satisfied by the browser's automatic Referer
+  // (your Netlify URL). We also throttle by caching results so the same city
+  // isn't re-queried within 30 days.
+  const r = await fetchWithTimeout(url, { headers: { 'Accept-Language': 'en' } }, 8000);
+  if (!r.ok) throw new Error('City lookup unavailable — enter lat/lon directly');
+  const j = await r.json();
+  if (!j.length) throw new Error('City not found — try a more specific name');
+  const result = { lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), label: j[0].display_name };
+  writeCache(key, result);
+  return result;
+}
+
+function hookGeocode(buttonId, cityInput, latInput, lonInput) {
+  document.getElementById(buttonId).addEventListener('click', async () => {
+    const city = cityInput.value.trim();
+    if (!city) return alert('Type a city first.');
+    try {
+      const r = await geocode(city);
+      latInput.value = r.lat.toFixed(4);
+      lonInput.value = r.lon.toFixed(4);
+    } catch (e) { alert('Could not find that city — try a more specific name.'); }
+  });
+}
+
+// ---------- WIRING ----------
+function $(sel, root=document) { return root.querySelector(sel); }
+function $$(sel, root=document) { return Array.from(root.querySelectorAll(sel)); }
+
+// Tabs
+$$('.tab').forEach(t => t.addEventListener('click', () => {
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  $$('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  $('#pane-'+t.dataset.tab).classList.add('active');
+}));
+
+// Natal form
+const natalForm = $('#natal-form');
+hookGeocode('geocode-natal', natalForm.city, natalForm.lat, natalForm.lon);
+natalForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(natalForm);
+  const out = $('#natal-results');
+  out.innerHTML = `<section class="card"><p class="small-note">Detecting timezone and calculating chart…</p></section>`;
+  out.classList.add('show');
+  try {
+    const date = fd.get('date'), time = fd.get('time');
+    const lat = parseFloat(fd.get('lat')), lon = parseFloat(fd.get('lon'));
+    const tz = await lookupTimezoneForCoords(lat, lon);
+    const { date: jsDate, offsetHours } = localTimeInZoneToUTC(date, time, tz.zone);
+    const tzInfo = { zone: tz.zone, fallback: tz.fallback, offsetHours };
+    const { html } = renderNatal(fd.get('name')||'', jsDate, lat, lon, tzInfo, fd.get('houseSystem'));
+    out.innerHTML = html;
+    out.scrollIntoView({behavior:'smooth', block:'start'});
+  } catch (err) {
+    out.innerHTML = `<div class="err">Something went wrong: ${errMsg(err)}</div>`;
+  }
+});
+
+// Synastry form
+const synForm = $('#syn-form');
+$$('button[data-geocode]', synForm).forEach(btn => {
+  const k = btn.dataset.geocode;
+  btn.addEventListener('click', async () => {
+    const city = synForm[`${k}_city`].value.trim();
+    if (!city) return alert('Type a city first.');
+    try {
+      const r = await geocode(city);
+      synForm[`${k}_lat`].value = r.lat.toFixed(4);
+      synForm[`${k}_lon`].value = r.lon.toFixed(4);
+    } catch (e) { alert('Could not find that city.'); }
+  });
+});
+
+// Contact form → Web3Forms AJAX submission.
+// Web3Forms maps the access_key to your real email server-side, so your
+// email address is nowhere in this page. Their API returns JSON with a
+// clear success/failure flag so we can show real feedback.
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const successEl = document.getElementById('contact-success');
+    const errorEl   = document.getElementById('contact-error');
+    if (errorEl) errorEl.style.display = 'none';
+
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const originalLabel = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+
+    const data = Object.fromEntries(new FormData(contactForm));
+
+    try {
+      const r = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept':       'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      const result = await r.json().catch(() => ({}));
+      if (r.ok && result.success) {
+        contactForm.style.display = 'none';
+        if (successEl) {
+          successEl.style.display = 'block';
+          successEl.innerHTML = `
+            <h3>Thanks — note received.</h3>
+            <p>I'll reply to the email you provided. Talk soon.</p>
+          `;
+          successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        throw new Error((result && result.message) || `Status ${r.status}`);
+      }
+    } catch (err) {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalLabel; }
+      if (errorEl) {
+        errorEl.style.display = 'block';
+        errorEl.innerHTML = `<p>Couldn't send that message: ${(err && err.message) || 'unknown error'}. Try again in a moment.</p>`;
+      }
+    }
+  });
+}
+
+synForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(synForm);
+  const out = $('#syn-results');
+  out.innerHTML = `<section class="card"><p class="small-note">Detecting timezones and calculating both charts…</p></section>`;
+  out.classList.add('show');
+  try {
+    const latA = parseFloat(fd.get('a_lat')), lonA = parseFloat(fd.get('a_lon'));
+    const latB = parseFloat(fd.get('b_lat')), lonB = parseFloat(fd.get('b_lon'));
+    const [tzA, tzB] = await Promise.all([
+      lookupTimezoneForCoords(latA, lonA),
+      lookupTimezoneForCoords(latB, lonB),
+    ]);
+    const a = localTimeInZoneToUTC(fd.get('a_date'), fd.get('a_time'), tzA.zone);
+    const b = localTimeInZoneToUTC(fd.get('b_date'), fd.get('b_time'), tzB.zone);
+    const tzInfoA = { zone: tzA.zone, fallback: tzA.fallback, offsetHours: a.offsetHours };
+    const tzInfoB = { zone: tzB.zone, fallback: tzB.fallback, offsetHours: b.offsetHours };
+    const hs = fd.get('houseSystem');
+    const { html: htmlA, positions: posA } = renderNatal(fd.get('a_name')||'Person A', a.date, latA, lonA, tzInfoA, hs);
+    const { html: htmlB, positions: posB } = renderNatal(fd.get('b_name')||'Person B', b.date, latB, lonB, tzInfoB, hs);
+    const synHtml = renderSynastry(fd.get('a_name')||'Person A', fd.get('b_name')||'Person B', posA, posB);
+    out.innerHTML = synHtml + htmlA + htmlB;
+    out.scrollIntoView({behavior:'smooth', block:'start'});
+  } catch (err) {
+    out.innerHTML = `<div class="err">Something went wrong: ${errMsg(err)}</div>`;
+  }
+});
+</script>
+</body>
+</html>
